@@ -1,3 +1,4 @@
+import Act from '@/app/ui/Act'
 /* 관리 · 설정 — 왼쪽에서 항목을 고르고 오른쪽에서 바꾼다. */
 
 const MENU = ['구성원 · 권한', '알림 문구', '접근 코드', '조회 기록', '거래처 단가', '캠페인 단계']
@@ -31,7 +32,7 @@ export default function Settings() {
             <div className="bar">
               <b style={{ fontSize: 14 }}>구성원 · 권한</b>
               <div className="right">
-                <button className="btn pri">구성원 초대</button>
+                <Act id="st-invite" variant="btn pri" label="구성원 초대" doneLabel="초대 보냄" eyebrow="MEMBER" title="구성원 초대" fields={[{name:"em",label:"메일",placeholder:"name@siriai.co.kr",required:true},{name:"role",label:"권한",type:"select",options:["운영 총괄","캠페인 담당","세일즈","외부 협력"],value:"캠페인 담당"},{name:"pii",label:"개인정보 열람",type:"select",options:["가림","열람 허용"],value:"가림"}]} confirmLabel="초대 보내기" doneTitle="초대를 보냈습니다" doneNote="메일로 초대장이 갔습니다. 수락하면 지정한 권한으로 들어옵니다." />
               </div>
             </div>
 
@@ -92,8 +93,8 @@ export default function Settings() {
             <div className="actionbar">
               <span className="sum">바꾼 내용은 즉시 적용됩니다</span>
               <div className="right">
-                <button className="btn">되돌리기</button>
-                <button className="btn pri">저장</button>
+                <Act id="st-undo" variant="btn" label="되돌리기" doneLabel="되돌림" eyebrow="UNDO" title="변경 되돌리기" intro={<><b>마지막 저장 시점으로 돌립니다</b>바꾼 내용은 사라집니다.</>} confirmLabel="되돌리기" doneTitle="되돌렸습니다" doneNote="마지막 저장 상태로 돌아갔습니다." />
+                <Act id="st-save" variant="btn pri" label="저장" doneLabel="저장됨" eyebrow="SAVE" title="설정 저장" intro={<><b>바꾼 내용을 적용합니다</b>개인정보 처리와 조회 기록 설정은 즉시 반영됩니다.</>} confirmLabel="저장" doneTitle="저장했습니다" doneNote="모든 구성원에게 즉시 적용됐습니다." />
               </div>
             </div>
           </div>

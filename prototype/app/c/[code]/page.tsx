@@ -1,6 +1,9 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCreatorView } from '@/lib/public'
 import { getDb, won, cnt, ymd } from '@/lib/db'
+import { AddressAct, AskAct, SettleAct } from './Actions'
+import Cover from './Cover'
 
 /* 인플루언서 페이지 — 폰으로 본다.
    한 화면에 하나씩, 다음에 할 일이 제일 위에. */
@@ -124,24 +127,57 @@ export default async function CreatorPage(props: PageProps<'/c/[code]'>) {
             <p>{open.length}건</p>
           </div>
           <div className="mcards">
-            {open.map((c) => (
-              <article className="open-card" key={c.id}>
-                <div>
-                  <div className="ot">{c.name.replace(/^\[[^\]]+\]\s*/, '')}</div>
-                  <div className="ms" style={{ marginTop: 5 }}>
-                    {c.brandName ?? ''} {c.detail ? `· ${c.detail.replace(/\n/g, ' ')}` : ''}
+            {open.map((c) => {
+              const fees = db.participations
+                .filter((p) => p.campaignId === c.id && p.proposedFee)
+                .map((p) => p.proposedFee!)
+              return (
+                <article className="open-card" key={c.id}>
+                  <Cover seed={c.id} brand={c.brandName ?? 'SIRIAI'} badge="모집 중" />
+                  <div className="open-bd">
+                    <div>
+                      <div className="ot">{c.name.replace(/^\[[^\]]+\]\s*/, '')}</div>
+                      <div className="ms" style={{ marginTop: 5 }}>
+                        {c.brandName ?? 'SIRIAI'}
+                      </div>
+                    </div>
+
+                    <div className="basics">
+                      <div>
+                        <span className="k">고료</span>
+                        <span className="v">
+                          {fees.length
+                            ? `${Math.round(Math.min(...fees) / 10000)}~${Math.round(Math.max(...fees) / 10000)}만`
+                            : '협의'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="k">제공 제품</span>
+                        <span className="v">{c.detail?.replace(/\n/g, ' ') || '캠페인 제품'}</span>
+                      </div>
+                      <div>
+                        <span className="k">마감</span>
+                        <span className="v">{c.dates.due ? ymd(c.dates.due) : '상시'}</span>
+                      </div>
+                    </div>
+
+                    <div className="tags">
+                      {c.counts.offered && <span className="tag">{cnt(c.counts.offered)}명 모집</span>}
+                      <span className="tag">인스타 릴스</span>
+                      {c.country && <span className="tag">{c.country}</span>}
+                    </div>
+
+                    <Link
+                      className="mbtn"
+                      href={`/apply/${c.id}?from=${v.code}`}
+                      style={{ padding: '13px 18px', fontSize: 14.5 }}
+                    >
+                      지원하기
+                    </Link>
                   </div>
-                </div>
-                <div className="tags">
-                  <span className="tag hot">모집 중</span>
-                  {c.counts.offered && <span className="tag">{cnt(c.counts.offered)}명 모집</span>}
-                  {c.dates.due && <span className="tag">마감 {ymd(c.dates.due)}</span>}
-                </div>
-                <button className="mbtn" style={{ padding: '12px 18px', fontSize: 14 }}>
-                  지원하기
-                </button>
-              </article>
-            ))}
+                </article>
+              )
+            })}
           </div>
         </section>
 
@@ -160,8 +196,9 @@ export default async function CreatorPage(props: PageProps<'/c/[code]'>) {
               <div className="task wait">
                 <div className="tn">
                   <b>정산자료 제출</b>
-                  <span>통장 사본과 신분증을 올리면 지급이 시작됩니다.</span>
+                  <span>계좌 정보를 제출하면 지급이 시작됩니다.</span>
                 </div>
+                <SettleAct earned={won(v.earned)} />
               </div>
             </article>
           </div>
@@ -194,8 +231,8 @@ export default async function CreatorPage(props: PageProps<'/c/[code]'>) {
 
       <div className="mob-bar">
         <div className="mob-in">
-          <button className="mbtn">주소 입력하기</button>
-          <button className="mbtn ghost">문의</button>
+          <AddressAct campaign={first ? label(first) : '진행 캠페인'} />
+          <AskAct />
         </div>
       </div>
     </div>

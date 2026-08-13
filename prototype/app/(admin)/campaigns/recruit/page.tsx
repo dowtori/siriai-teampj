@@ -1,4 +1,6 @@
 import { getDb, cnt, won } from '@/lib/db'
+import Act from '@/app/ui/Act'
+import PageBuilder, { type Pool } from './PageBuilder'
 
 /* 모집 · 선정 — 지원자를 훑고 골라 담는 화면.
    왼쪽에서 고르고, 오른쪽에서 무엇을 담았는지 보고, 아래에서 실행한다. */
@@ -21,6 +23,27 @@ export default function Recruit() {
   const picked = pool.filter((p) => p.on)
   const sum = picked.reduce((s, p) => s + (p.fee ?? 0), 0)
 
+  // 노출 대상 후보 — 계정 기준으로 묶고 협업 횟수를 센다
+  const byHandle = new Map<string, Pool>()
+  for (const p of db.participations) {
+    if (!p.handleUrl) continue
+    const cur = byHandle.get(p.handleUrl)
+    if (!cur) {
+      byHandle.set(p.handleUrl, {
+        key: p.handleUrl,
+        name: p.displayName,
+        handle: p.handleUrl,
+        followers: p.followers,
+        worked: p.selected ? 1 : 0,
+        region: p.region,
+      })
+    } else {
+      if (p.selected) cur.worked += 1
+      if ((p.followers ?? 0) > (cur.followers ?? 0)) cur.followers = p.followers
+    }
+  }
+  const pool2 = [...byHandle.values()].sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
+
   return (
     <div className="wrap">
       <div className="ph">
@@ -34,6 +57,14 @@ export default function Recruit() {
         <div className="right">
           <span className="chip line">레이아웃 미리보기</span>
         </div>
+      </div>
+
+      <div className="zone">
+        <div className="zh">
+          <h2>지원 페이지</h2>
+          <p>어드민에서 만들고, 조건에 맞는 인플루언서에게만 노출합니다</p>
+        </div>
+        <PageBuilder pool={pool2} campaign="오드타입 26년 9월 1주차" />
       </div>
 
       <div className="zone">
@@ -87,8 +118,27 @@ export default function Recruit() {
                 <b>{picked.length}</b>명 담음 · 예상 비용 <b>{won(sum)}</b>
               </span>
               <div className="right">
-                <button className="btn">명단으로 저장</button>
-                <button className="btn pri">선정 안내 보내기</button>
+                <Act
+                  id="rc-save" variant="btn" label="명단으로 저장" doneLabel="명단 저장됨"
+                  eyebrow="POOL" title="명단으로 저장"
+                  intro={<><b>고른 {picked.length}명을 명단으로 남깁니다</b>다음 캠페인에서 바로 불러올 수 있습니다.</>}
+                  fields={[{ name: 'nm', label: '명단 이름', placeholder: '예: 무신사 뷰티 · 1만 이하', required: true }]}
+                  confirmLabel="저장" doneTitle="명단으로 저장했습니다"
+                  doneNote="인플루언서 명단 화면에서 불러올 수 있습니다."
+                />
+                <Act
+                  id="rc-invite" variant="btn pri" label="선정 안내 보내기" doneLabel="선정 안내 발송됨"
+                  eyebrow="NOTIFY" title="선정 안내 보내기"
+                  intro={<><b>{picked.length}명에게 알림톡이 나갑니다</b>보내면 캠페인 단계가 &lsquo;선정&rsquo;으로 넘어가고, 각자 페이지에서 주소를 입력할 수 있게 됩니다.</>}
+                  fields={[
+                    { name: 'tpl', label: '문구', type: 'select', value: '선정 안내 (기본)',
+                      options: ['선정 안내 (기본)', '선정 안내 + 일정 강조', '급건 안내'] },
+                    { name: 'add', label: '덧붙일 말', type: 'textarea', placeholder: '캠페인별 안내사항' },
+                  ]}
+                  confirmLabel={`${picked.length}명에게 보내기`}
+                  doneTitle="선정 안내를 보냈습니다"
+                  doneNote="알림톡이 발송됐습니다. 주소를 입력한 인원부터 배송 단계로 넘어갑니다."
+                />
               </div>
             </div>
           </div>

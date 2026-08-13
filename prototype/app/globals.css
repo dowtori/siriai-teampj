@@ -360,7 +360,8 @@ button{font:inherit;color:inherit}
 :root[data-theme="dark"] .ov.ov2,:root:not([data-theme="light"]) .ov.ov2{background:rgba(0,0,0,.6)}
 .modal{
   position:fixed;z-index:91;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:min(880px,94vw);max-height:86vh;background:var(--card);
+  width:min(1000px,95vw);max-height:90vh;background:var(--card);
+
   border:1px solid var(--line);border-radius:18px;box-shadow:var(--over);
   display:flex;flex-direction:column;overflow:hidden;animation:pop .26s var(--ease);
 }
@@ -486,6 +487,18 @@ button{font:inherit;color:inherit}
 .flow .fs.on{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent);z-index:1}
 .flow .fs .n{font-family:var(--lt);font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .flow .fs.on .n{color:var(--accent-ink)}
+
+/* ═══ 실행 완료 ═══ */
+.act-done{display:flex;flex-direction:column;align-items:center;gap:16px;padding:26px 0 10px;text-align:center}
+.act-done .mark{
+  width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+  background:var(--ok-soft);color:var(--ok);font-size:26px;
+}
+.act-done p{margin:0;font-size:14px;color:var(--ink-2);line-height:1.6;max-width:40ch;letter-spacing:-.012em}
+.btn[disabled],.pbtn[disabled],.mbtn[disabled]{opacity:.4;cursor:default}
+select.field{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
+  background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+textarea.field{resize:vertical;min-height:74px;line-height:1.55}
 
 /* ═══ 알림줄 ═══ */
 .note{

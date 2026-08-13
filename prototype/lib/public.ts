@@ -113,6 +113,32 @@ export function listCreators(limit = 6) {
     }))
 }
 
+/** 코드로 들어온 사람의 등록 정보 — 지원 폼에 선기입한다 */
+export type Prefill = {
+  name: string
+  handle: string | null
+  phone: string | null
+  realName: string | null
+  address: string | null
+  followers: number | null
+}
+
+export function getPrefill(code: string): Prefill | null {
+  const v = getCreatorView(code)
+  if (!v) return null
+  const withPii = v.joined.map((j) => j.part).find((p) => p.pii.realName || p.pii.phone)
+  const any = v.joined[0]?.part
+  const src = withPii ?? any
+  return {
+    name: v.name,
+    handle: v.handle,
+    followers: v.followers,
+    realName: src?.pii.realName ?? null,
+    phone: src?.pii.phone ?? null,
+    address: src?.pii.address ?? null,
+  }
+}
+
 export function getCreatorView(code: string): CreatorView | null {
   const db = getDb()
   const by = new Map<string, Participation[]>()

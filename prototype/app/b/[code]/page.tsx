@@ -1,166 +1,342 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getBrandView } from '@/lib/public'
-import { won, cnt, rate, ymd, stage } from '@/lib/db'
+import { getDb, cnt, rate, ymd } from '@/lib/db'
+import {
+  STAGES, stageForDemo, pickLive, stageIndex, stageMeta, needsBrand, type StageKey,
+} from '@/lib/stages'
+import Embed from '../Embed'
+import Act from '@/app/ui/Act'
+import BrandNav, { type NavCampaign } from './BrandNav'
+import Roster, { type SheetRow } from './Roster'
 
-/* 브랜드 페이지 — 고객사가 받아보는 화면.
-   어드민처럼 다 보여주지 않는다. 자기 캠페인만, 크게, 정리해서. */
+/* 브랜드 페이지
+   ?s=단계  → 홈 안에서 그 단계만 걸러 본다 (페이지 이동 아님)
+   ?c=캠페인 → 캠페인 하나를 자세히 본다 */
 
 export default async function BrandPage(props: PageProps<'/b/[code]'>) {
   const { code } = await props.params
+  const sp = await props.searchParams
+  const pick = typeof sp.c === 'string' ? sp.c : null
+  const filter = typeof sp.s === 'string' ? (sp.s as StageKey) : null
+
   const v = getBrandView(code)
   if (!v) notFound()
 
-  const { brand, campaigns, running, totals, people, contents } = v
-  const recent = campaigns.slice(0, 4)
+  const db = getDb()
+  const { brand, campaigns } = v
+  const liveSet = pickLive(campaigns, 4)
+  const withStage = campaigns.map((c) => ({ c, st: stageForDemo(c, liveSet) }))
 
-  return (
-    <div className="pub">
-      <header className="pub-top">
-        <div className="pub-in">
-          <span className="mk">SIRIAI</span>
-          <span className="who">{brand.name}</span>
-          <div className="right">
-            <span className="code-chip">{v.code}</span>
-          </div>
-        </div>
-      </header>
+  const nav: NavCampaign[] = withStage.map(({ c, st }) => ({
+    id: c.id,
+    name: c.name.replace(/^\[[^\]]+\]\s*/, ''),
+    month: c.monthLabel ?? '',
+    stageKey: st,
+    stageLabel: stageMeta(st).label,
+  }))
 
-      <section className="pub-in pub-hero">
-        <p className="eb">CAMPAIGN REPORT · 2026</p>
-        <h1>
-          <em>{brand.name}</em>님과 함께한
-          <br />
-          캠페인 {totals.campaigns}건입니다.
-        </h1>
-        <p>
-          진행 중인 캠페인과 지금까지 올라온 콘텐츠를 한자리에 모았습니다.
-          궁금한 점은 담당자에게 바로 말씀해 주세요.
-        </p>
-      </section>
+  const one = pick ? campaigns.find((x) => x.id === pick) ?? null : null
 
-      <div className="pub-in">
-        <div className="pub-stats">
-          <div>
-            <span className="k">CREATORS</span>
-            <span className="v">{cnt(totals.selected)}</span>
-            <span className="s">함께한 인플루언서</span>
-          </div>
-          <div>
-            <span className="k">CONTENTS</span>
-            <span className="v">{cnt(totals.uploaded)}</span>
-            <span className="s">게시된 콘텐츠</span>
-          </div>
-          <div>
-            <span className="k">EST. REACH</span>
-            <span className="v">{totals.reach >= 10000 ? `${Math.round(totals.reach / 10000)}만` : cnt(totals.reach)}</span>
-            <span className="s">예상 노출</span>
-          </div>
-          <div>
-            <span className="k">RUNNING</span>
-            <span className="v">{cnt(running.length)}</span>
-            <span className="s">진행 중</span>
-          </div>
-        </div>
-      </div>
+  /* ─────────── 캠페인 하나 ─────────── */
+  if (one) {
+    const st = stageForDemo(one, liveSet)
+    const si = stageIndex(st)
+    const parts = db.participations.filter((p) => p.campaignId === one.id)
+    const picked = parts.filter((p) => p.selected)
+    const contents = picked.filter((p) => p.contentUrl?.startsWith('http')).slice(0, 9)
+    const people = picked.filter((p) => p.handleUrl).sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
+    const reach = picked.reduce((s, p) => s + (p.estViews ?? 0), 0)
 
-      <section className="pub-in pub-sec">
-        <div className="pub-sh">
-          <h2>캠페인</h2>
-          <p>최근 순</p>
-        </div>
-        <div className="bcards">
-          {recent.map((c) => {
-            const st = stage(c.status)
-            const up = c.rates.upload ?? 0
-            return (
-              <article className="bcard" key={c.id}>
-                <div>
-                  <div className="bt">{c.name.replace(/^\[[^\]]+\]\s*/, '')}</div>
-                  <div className="bs">
-                    {c.monthLabel ?? ''} {c.detail ? `· ${c.detail.replace(/\n/g, ' ')}` : ''} · {st.label}
-                  </div>
-                </div>
-                <div className="bm">
-                  <div>
-                    <span className="k">SELECTED</span>
-                    <span className="v">{cnt(c.counts.selected)}</span>
-                  </div>
-                  <div>
-                    <span className="k">UPLOADED</span>
-                    <span className="v">{cnt(c.counts.uploaded)}</span>
-                  </div>
-                  <div>
-                    <span className="k">진척</span>
-                    <span className="v">{rate(c.rates.upload)}</span>
-                  </div>
-                </div>
-                <div className="track">
-                  <i style={{ width: `${Math.min(up * 100, 100)}%` }} />
-                </div>
-              </article>
-            )
-          })}
-        </div>
-      </section>
+    // 계정 주소가 있는 행만 브랜드에게 보여준다
+    const sheet: SheetRow[] = parts.filter((p) => p.handleUrl).slice(0, 40).map((p, i) => ({
+      no: i + 1,
+      name: p.displayName,
+      handle: p.handleUrl,
+      followers: p.followers,
+      region: p.region,
+      language: p.language,
+      estViews: p.estViews,
+      er: p.er,
+      likes: p.avgLikes,
+      comments: p.avgComments,
+      fee: p.proposedFee,
+      picked: p.selected,
+      note: p.campaignChoice,
+      contentUrl: p.contentUrl,
+    }))
 
-      {contents.length > 0 && (
-        <section className="pub-in pub-sec">
-          <div className="pub-sh">
-            <h2>올라온 콘텐츠</h2>
-            <p>눌러서 원본을 봅니다</p>
-          </div>
-          <div className="cgrid">
-            {contents.map((c, i) => (
-              <a className="cthumb" key={i} href={c.url} target="_blank" rel="noreferrer">
-                <span className="sq" />
-                <span className="cn">{c.name}</span>
-                <span className="cm">{c.views ? `${cnt(c.views)} 조회` : '게시 완료'}</span>
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
+    return (
+      <div className="bshell">
+        <BrandNav code={code} brand={brand.name} campaigns={nav} />
+        <div className="bmain"><div className="pub">
 
-      {people.length > 0 && (
-        <section className="pub-in pub-sec">
-          <div className="pub-sh">
-            <h2>참여 인플루언서</h2>
-            <p>팔로워 순 {people.length}명</p>
-          </div>
-          <div className="people">
-            {people.map((p, i) => (
-              <div className="person" key={i}>
-                <span className="av" />
-                <span>
-                  <span className="pn">{p.name}</span>
-                  <span className="pm" style={{ display: 'block', marginTop: 2 }}>
-                    {cnt(p.followers)}
-                  </span>
+          <section className="pub-in pub-hero">
+            <p className="eb">{one.monthLabel ?? 'CAMPAIGN'} · {stageMeta(st).label}</p>
+            <h1>{one.name.replace(/^\[[^\]]+\]\s*/, '')}</h1>
+            {one.detail && <p>{one.detail.replace(/\n/g, ' · ')}</p>}
+          </section>
+
+          <section className="pub-in pub-sec no-line" style={{ paddingTop: 0 }}>
+            <div className="pdots" style={{ marginBottom: 34 }}>
+              {STAGES.map((s, i) => (
+                <span key={s.key} className={`pd ${i < si ? 'done' : ''} ${i === si ? 'now' : ''} ${s.brandAction ? 'act' : ''}`}>
+                  <i /><span>{s.label}</span>
+                </span>
+              ))}
+            </div>
+
+            {needsBrand(st) && (
+              <div className="callout" style={{ marginBottom: 34 }}>
+                <span className="big">{cnt(one.counts.selected)}</span>
+                <span className="tx">
+                  <b>컨펌을 기다리고 있습니다</b>
+                  <span>제안드린 인원을 확인해 주시면 제품 발송이 시작됩니다.</span>
+                </span>
+                <span className="right">
+                  <Roster rows={sheet} campaign={one.name.replace(/^\[[^\]]+\]\s*/, '')} total={picked.length} />
                 </span>
               </div>
-            ))}
+            )}
+
+            <div className="pub-stats">
+              <div>
+                <span className="k">SELECTED</span>
+                <span className="v">{cnt(one.counts.selected)}</span>
+                <span className="s">제안 {cnt(one.counts.offered)}명 중</span>
+              </div>
+              <div>
+                <span className="k">UPLOADED</span>
+                <span className="v">{cnt(one.counts.uploaded)}</span>
+                <span className="s">업로드율 {rate(one.rates.upload)}</span>
+              </div>
+              <div>
+                <span className="k">EST. REACH</span>
+                <span className="v">{reach >= 10000 ? `${Math.round(reach / 10000)}만` : cnt(reach)}</span>
+                <span className="s">예상 노출</span>
+              </div>
+              <div>
+                <span className="k">납품</span>
+                <span className="v" style={{ fontSize: 20 }}>{ymd(one.dates.due)}</span>
+                <span className="s">예정일</span>
+              </div>
+            </div>
+          </section>
+
+          {!needsBrand(st) && sheet.length > 0 && (
+            <section className="pub-in pub-sec">
+              <div className="pub-sh">
+                <h2>선정 인원</h2>
+                <p>{picked.length}명</p>
+                <div className="right">
+                  <Roster rows={sheet} campaign={one.name.replace(/^\[[^\]]+\]\s*/, '')} total={picked.length} />
+                </div>
+              </div>
+              <div className="people">
+                {people.slice(0, 16).map((p, i) => (
+                  <div className="person" key={i}>
+                    <span className="av" />
+                    <span style={{ minWidth: 0 }}>
+                      <span className="pn" style={{ fontFamily: 'var(--lt)', fontSize: 13 }}>
+                        @{p.handleUrl!.replace('instagram.com/', '')}
+                      </span>
+                      <span className="pm" style={{ display: 'block', marginTop: 2 }}>{cnt(p.followers)} 팔로워</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {contents.length > 0 && (
+            <section className="pub-in pub-sec">
+              <div className="pub-sh"><h2>올라온 콘텐츠</h2><p>실제 게시물</p></div>
+              <div className="egrid">
+                {contents.map((p, i) => (
+                  <Embed key={i} url={p.contentUrl!} handle={p.handleUrl} followers={p.followers}
+                    meta={p.estViews ? `예상 ${cnt(p.estViews)} 조회` : undefined} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <Closing brand={brand.name} code={code} n={campaigns.length} />
+        </div></div>
+      </div>
+    )
+  }
+
+  /* ─────────── 홈 ─────────── */
+  const shown = filter ? withStage.filter(({ st }) => st === filter) : withStage
+  const waiting = withStage.filter(({ st }) => needsBrand(st))
+  const running = withStage.filter(({ st }) => st !== 'settled')
+  const byStage = (k: StageKey) => withStage.filter(({ st }) => st === k)
+  const liveParts = db.participations.filter(
+    (p) => p.selected && running.some(({ c }) => c.id === p.campaignId),
+  )
+
+  return (
+    <div className="bshell">
+      <BrandNav code={code} brand={brand.name} campaigns={nav} />
+      <div className="bmain"><div className="pub">
+
+        <section className="pub-in pub-hero">
+          <p className="eb">CAMPAIGN STATUS</p>
+          <h1>진행중인 캠페인 <em>{running.length}건</em></h1>
+          <p>
+            {waiting.length > 0
+              ? `이 중 ${waiting.length}건이 컨펌을 기다리고 있습니다.`
+              : '확인해주실 건은 없습니다. 순조롭게 진행 중입니다.'}
+          </p>
+        </section>
+
+        <section className="pub-in pub-sec no-line" style={{ paddingTop: 0 }}>
+          {waiting.length > 0 ? (
+            <div className="callout">
+              <span className="big">{waiting.length}</span>
+              <span className="tx">
+                <b>컨펌을 기다리는 캠페인이 있습니다</b>
+                <span>{waiting.map(({ c }) => c.name.replace(/^\[[^\]]+\]\s*/, '')).join(' · ')}</span>
+              </span>
+              <span className="right">
+                <Link className="pbtn" href={`/b/${code}?c=${waiting[0].c.id}`}>확인하러 가기</Link>
+              </span>
+            </div>
+          ) : (
+            <div className="callout calm">
+              <span className="big">✓</span>
+              <span className="tx">
+                <b>지금 확인해주실 건은 없습니다</b>
+                <span>업로드가 끝나면 알려드리겠습니다.</span>
+              </span>
+            </div>
+          )}
+        </section>
+
+        <section className="pub-in pub-sec">
+          <div className="pub-sh">
+            <h2>단계별 현황</h2>
+            <p>눌러서 그 단계만 볼 수 있습니다</p>
+            {filter && (
+              <div className="right">
+                <Link className="pbtn ghost" href={`/b/${code}`}>필터 해제</Link>
+              </div>
+            )}
+          </div>
+          <div className="pipe">
+            {STAGES.map((s) => {
+              const rows = byStage(s.key)
+              const on = filter === s.key
+              const cls = [
+                rows.length === 0 ? 'zero' : '',
+                s.brandAction && rows.length > 0 ? 'act' : '',
+                on ? 'sel' : '',
+              ].filter(Boolean).join(' ')
+              return (
+                <Link key={s.key} href={on ? `/b/${code}` : `/b/${code}?s=${s.key}`} className={cls}>
+                  {rows.length > 0 && <span className="on-mark" />}
+                  <span className="sn">STEP {stageIndex(s.key) + 1}</span>
+                  <span className="sv">{rows.length}</span>
+                  <span className="sl">{s.label}</span>
+                </Link>
+              )
+            })}
           </div>
         </section>
-      )}
 
+        <section className="pub-in pub-sec">
+          <div className="pub-sh">
+            <h2>{filter ? `${stageMeta(filter).label} 캠페인` : '캠페인'}</h2>
+            <p>
+              {filter
+                ? `${shown.length}건`
+                : `진행중 ${running.length}건 · 참여 인플루언서 ${cnt(liveParts.length)}명`}
+            </p>
+          </div>
+
+          {shown.length === 0 ? (
+            <div className="note info"><div>이 단계에 있는 캠페인이 없습니다.</div></div>
+          ) : (
+            <div className="bcards">
+              {(filter ? shown : running.length > 0 ? running : shown).slice(0, 8).map(({ c, st }) => {
+                const si = stageIndex(st)
+                const up = c.rates.upload ?? 0
+                return (
+                  <Link className="bcard" key={c.id} href={`/b/${code}?c=${c.id}`}>
+                    <div>
+                      <div className="bt">{c.name.replace(/^\[[^\]]+\]\s*/, '')}</div>
+                      <div className="bs">
+                        {c.monthLabel ?? ''}
+                        {c.detail ? ` · ${c.detail.replace(/\n/g, ' ')}` : ''}
+                        {c.dates.due ? ` · 납품 ${ymd(c.dates.due)}` : ''}
+                      </div>
+                    </div>
+                    <div className="bm">
+                      <div><span className="k">선정</span><span className="v">{cnt(c.counts.selected)}</span></div>
+                      <div><span className="k">업로드</span><span className="v">{cnt(c.counts.uploaded)}</span></div>
+                      <div><span className="k">진척</span><span className="v">{rate(c.rates.upload)}</span></div>
+                    </div>
+                    <div className="pdots" style={{ gridColumn: '1/-1', marginTop: 6 }}>
+                      {STAGES.map((s, i) => (
+                        <span key={s.key} className={`pd ${i < si ? 'done' : ''} ${i === si ? 'now' : ''} ${s.brandAction ? 'act' : ''}`}>
+                          <i /><span>{s.short}</span>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="track" style={{ gridColumn: '1/-1' }}>
+                      <i style={{ width: `${Math.min(up * 100, 100)}%` }} />
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        <Closing brand={brand.name} code={code} n={campaigns.length} />
+      </div></div>
+    </div>
+  )
+}
+
+function Closing({ brand, code, n }: { brand: string; code: string; n: number }) {
+  return (
+    <>
       <section className="pub-in pub-end">
         <h2>다음 캠페인도 준비되어 있습니다</h2>
-        <p>
-          이번 캠페인에서 반응이 좋았던 인플루언서를 기준으로 다음 명단을 제안드릴 수 있습니다.
-        </p>
+        <p>이번 캠페인에서 반응이 좋았던 인플루언서를 기준으로 다음 명단을 제안드릴 수 있습니다.</p>
         <div className="pub-btns">
-          <button className="pbtn">담당자에게 문의</button>
-          <button className="pbtn ghost">리포트 내려받기</button>
+          <Act
+            id={`b-ask-${code}`} variant="pbtn" label="담당자에게 문의" doneLabel="문의 접수됨"
+            eyebrow="CONTACT" title="담당자에게 문의"
+            fields={[
+              { name: 'kind', label: '문의 종류', type: 'select', value: '다음 캠페인 제안',
+                options: ['다음 캠페인 제안', '명단 변경 요청', '진행중 캠페인 문의', '리포트 요청', '기타'] },
+              { name: 'body', label: '내용', type: 'textarea', required: true, placeholder: '어떤 점이 궁금하신가요?' },
+            ]}
+            confirmLabel="보내기" doneTitle="문의를 보냈습니다"
+            doneNote={`${brand} 담당자에게 전달했습니다. 영업일 기준 1일 이내에 회신드립니다.`}
+          />
+          <Act
+            id={`b-report-${code}`} variant="pbtn ghost" label="리포트 내려받기" doneLabel="발송 완료"
+            eyebrow="REPORT" title="리포트 받기"
+            intro={<><b>캠페인 {n}건 전체 리포트</b>참여 인플루언서 · 콘텐츠 · 성과를 담은 문서를 메일로 보내드립니다.</>}
+            fields={[
+              { name: 'email', label: '받을 메일', placeholder: 'name@company.com', required: true },
+              { name: 'fmt', label: '형식', type: 'select', options: ['PDF', 'Excel', '둘 다'], value: 'PDF' },
+            ]}
+            confirmLabel="메일로 받기" doneTitle="리포트를 보냈습니다"
+            doneNote="입력하신 메일로 발송했습니다. 몇 분 안에 도착합니다."
+          />
         </div>
       </section>
 
       <footer className="pub-foot">
         <div className="pub-in">
           <span>SIRIAI</span>
-          <span>이 페이지는 {brand.name}님께만 공유됩니다</span>
+          <span>이 페이지는 {brand}님께만 공유됩니다</span>
         </div>
       </footer>
-    </div>
+    </>
   )
 }

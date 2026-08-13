@@ -54,7 +54,7 @@ export function Drawer({
 }
 
 export function Modal({
-  open, onClose, eyebrow, title, meta, footer, children,
+  open, onClose, eyebrow, title, meta, footer, children, wide,
 }: {
   open: boolean
   onClose: () => void
@@ -63,6 +63,8 @@ export function Modal({
   meta?: ReactNode
   footer?: ReactNode
   children: ReactNode
+  /** 표나 격자처럼 폭이 필요한 내용일 때 */
+  wide?: boolean
 }) {
   useOverlay(open, onClose)
   if (!open) return null
@@ -70,7 +72,7 @@ export function Modal({
     <>
       {/* 드로어 위에 한 겹 더 — 3단은 2단을 덮는다 */}
       <div className="ov ov2" onClick={onClose} />
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="dr-h">
           <div style={{ minWidth: 0 }}>
             {eyebrow && <p className="eb">{eyebrow}</p>}

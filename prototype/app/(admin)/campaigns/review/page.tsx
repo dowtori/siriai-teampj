@@ -1,4 +1,5 @@
 import { getDb, cnt } from '@/lib/db'
+import Act from '@/app/ui/Act'
 
 /* 검수 — 왼쪽에서 사람을 고르고 오른쪽에서 체크한다.
    지금 쓰는 검수시트 세 단계를 그대로 옮긴 작업 화면. */
@@ -50,8 +51,19 @@ export default function Review() {
               <b style={{ fontSize: 14 }}>{cur?.name ?? '—'}</b>
               <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>{cur?.handle}</span>
               <div className="right">
-                <button className="btn">이전</button>
-                <button className="btn pri">체크하고 다음 →</button>
+                <Act
+                  id="rv-next" variant="btn pri" label="체크하고 다음 →" doneLabel="검수 저장됨"
+                  eyebrow="REVIEW" title="이 인원 검수 저장"
+                  intro={<><b>{cur?.name ?? ''} 검수 결과를 저장합니다</b>저장하면 다음 대기 인원으로 넘어갑니다.</>}
+                  fields={[
+                    { name: 'res', label: '결과', type: 'select', value: '통과',
+                      options: ['통과', '수정 요청', '보류'] },
+                    { name: 'memo', label: '메모', type: 'textarea', placeholder: '가드닝·해시태그 등 남길 말' },
+                  ]}
+                  confirmLabel="저장하고 다음"
+                  doneTitle="검수를 저장했습니다"
+                  doneNote="다음 대기 인원으로 넘어갑니다. 결과에 따라 인플루언서에게 알림이 나갑니다."
+                />
               </div>
             </div>
 
@@ -107,8 +119,33 @@ export default function Review() {
             <div className="actionbar">
               <span className="sum">가드닝과 공동작업자가 남았습니다</span>
               <div className="right">
-                <button className="btn">재업로드 요청</button>
-                <button className="btn pri">검수 완료</button>
+                <Act
+                  id="rv-redo" variant="btn" label="재업로드 요청" doneLabel="재업로드 요청됨"
+                  eyebrow="REQUEST" title="재업로드 요청"
+                  intro={<><b>인플루언서에게 수정을 요청합니다</b>알림톡으로 사유와 함께 전달됩니다.</>}
+                  fields={[
+                    { name: 'why', label: '사유', type: 'select', value: '해시태그 누락',
+                      options: ['해시태그 누락', '협찬 표기 누락', '가이드라인 불일치', '공동작업자 미설정', '기타'] },
+                    { name: 'memo', label: '요청 내용', type: 'textarea', required: true,
+                      placeholder: '무엇을 어떻게 고쳐야 하는지 적어주세요' },
+                  ]}
+                  confirmLabel="요청 보내기" doneTitle="재업로드를 요청했습니다"
+                  doneNote="알림톡이 나갔습니다. 다시 올라오면 검수 대기로 돌아옵니다."
+                />
+                <Act
+                  id="rv-done" variant="btn pri" label="검수 완료" doneLabel="검수 완료됨"
+                  eyebrow="COMPLETE" title="검수 완료 처리"
+                  intro={<><b>이 캠페인 검수를 마칩니다</b>완료하면 정산 단계로 넘어가고, 인플루언서에게 정산자료 제출 안내가 나갑니다.</>}
+                  summary={
+                    <div className="trio">
+                      <div><span className="k">검수 대상</span><span className="v">{people.length}</span></div>
+                      <div><span className="k">통과</span><span className="v">{people.filter((p) => p.done).length}</span></div>
+                      <div><span className="k">남음</span><span className="v">{people.filter((p) => !p.done).length}</span></div>
+                    </div>
+                  }
+                  confirmLabel="검수 완료" doneTitle="검수를 완료했습니다"
+                  doneNote="정산 단계로 넘어갔습니다. 인플루언서에게 정산자료 제출 안내가 나갔습니다."
+                />
               </div>
             </div>
           </div>

@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { listCreators } from '@/lib/public'
+import Gate from '@/app/ui/Gate'
 
 /* 인플루언서 코드 게이트 — 폰으로 들어온다. */
 
 export default function CreatorGate() {
-  const people = listCreators(5)
+  const all = listCreators(40)
+  const people = all.slice(0, 5)
   return (
     <div className="gate">
       <div className="gate-box">
@@ -16,10 +18,7 @@ export default function CreatorGate() {
           </p>
         </div>
 
-        <div className="gate-in">
-          <input placeholder="코드 6자리" maxLength={6} readOnly />
-          <button className="pbtn">입장</button>
-        </div>
+        <Gate base="/c" codes={all.map((p) => p.code)} />
 
         <div className="gate-demo">
           <span>DEMO</span>

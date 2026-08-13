@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { listBrands } from '@/lib/public'
+import Gate from '@/app/ui/Gate'
 
 /* 브랜드 코드 게이트 — 로그인이 아니라 코드 하나로 들어온다. */
 
 export default function BrandGate() {
-  const brands = listBrands().slice(0, 6)
+  const all = listBrands()
+  const brands = all.slice(0, 6)
   return (
     <div className="gate">
       <div className="gate-box">
@@ -16,10 +18,7 @@ export default function BrandGate() {
           </p>
         </div>
 
-        <div className="gate-in">
-          <input placeholder="코드 6자리" maxLength={6} readOnly />
-          <button className="pbtn">입장</button>
-        </div>
+        <Gate base="/b" codes={all.map((b) => b.code)} />
 
         <div className="gate-demo">
           <span>DEMO</span>

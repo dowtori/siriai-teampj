@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db'
+import Act from '@/app/ui/Act'
 
 /* 브랜드 페이지 발급 — 코드를 만들고, 무엇을 보여줄지 고르고, 미리 본다. */
 
@@ -27,7 +28,7 @@ export default function BrandPages() {
             <div className="bar">
               <b style={{ fontSize: 14 }}>발급한 코드</b>
               <div className="right">
-                <button className="btn pri">코드 만들기</button>
+                <Act id="bp-code" variant="btn pri" label="코드 만들기" doneLabel="코드 발급됨" eyebrow="ISSUE" title="브랜드 페이지 코드 발급" intro={<><b>거래처에 전달할 코드를 만듭니다</b>로그인 없이 코드만으로 들어옵니다.</>} fields={[{name:"brand",label:"거래처",type:"select",options:["무신사","아울러엘앤비 주식회사","에코디엠랩주식회사","(주)필블랭크","루씨드"],value:"무신사"},{name:"exp",label:"만료",type:"select",options:["무기한","30일","90일","캠페인 종료까지"],value:"무기한"}]} confirmLabel="발급" doneTitle="코드를 발급했습니다" doneNote="거래처에 전달하시면 바로 들어올 수 있습니다. 열람 기록이 함께 쌓입니다." />
               </div>
             </div>
             <div className="rows">
@@ -48,7 +49,7 @@ export default function BrandPages() {
             <div className="actionbar">
               <span className="sum">코드를 만들면 열람 기록이 함께 쌓입니다</span>
               <div className="right">
-                <button className="btn">열람 기록 보기</button>
+                <Act id="bp-log" variant="btn" label="열람 기록 보기" doneLabel="열람 기록 확인함" eyebrow="LOG" title="열람 기록" intro={<><b>누가 언제 열었는지 남습니다</b>영업 후속 연락의 근거가 됩니다.</>} confirmLabel="확인" doneTitle="열람 기록" doneNote="코드를 발급하면 이 자리에 접속 기록이 쌓입니다." />
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getDb, won, cnt, rate, ymd } from '@/lib/db'
+import Act from '@/app/ui/Act'
 
 /* 정산 — 계산서 발급일을 기준으로 잡는다. */
 
@@ -115,8 +116,8 @@ export default function SettlementPage() {
           <div className="bar">
             <input className="field" placeholder="캠페인 · 거래처로 찾기" readOnly />
             <div className="right">
-              <button className="btn">회계로 내보내기</button>
-              <button className="btn pri">발급 대상 확정</button>
+              <Act id="se-export" variant="btn" label="회계로 내보내기" doneLabel="내보냄" eyebrow="EXPORT" title="회계로 내보내기" fields={[{name:"per",label:"기간",type:"select",options:["이번 달","지난 달","전체"],value:"이번 달"},{name:"fmt",label:"형식",type:"select",options:["Excel","CSV","더존 양식"],value:"Excel"}]} confirmLabel="내보내기" doneTitle="내보냈습니다" doneNote="발급 대상 목록을 파일로 만들었습니다. 쓰시던 회계 도구에 그대로 올리시면 됩니다." />
+              <Act id="se-fix" variant="btn pri" label="발급 대상 확정" doneLabel="확정됨" eyebrow="CONFIRM" title="계산서 발급 대상 확정" intro={<><b>확정하면 매출 인식일이 잡힙니다</b>계산서 발급일 기준으로 월별 집계에 들어갑니다.</>} fields={[{name:"d",label:"발급일",placeholder:"2026-08-31"}]} confirmLabel="확정" doneTitle="발급 대상을 확정했습니다" doneNote="월별 집계에 반영됐습니다. 회계로 내보내기로 넘기시면 됩니다." />
             </div>
           </div>
           <div className="rows">

@@ -1,4 +1,5 @@
 import { getDb, won, cnt } from '@/lib/db'
+import Act from '@/app/ui/Act'
 
 /* 제안 · 견적 — 담으면 금액이 바로 계산되는 화면. */
 
@@ -41,7 +42,7 @@ export default function Proposals() {
               <b style={{ fontSize: 14 }}>제안서</b>
               <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>무신사 · 26년 9월 1주차</span>
               <div className="right">
-                <button className="btn">명단에서 담기</button>
+                <Act id="pp-add" variant="btn" label="명단에서 담기" doneLabel="인원 담김" eyebrow="POOL" title="명단에서 인원 담기" intro={<><b>협업 경험 명단에서 조건으로 좁혀 담습니다</b>담으면 오른쪽 견적이 따라 움직입니다.</>} fields={[{name:"cat",label:"카테고리",type:"select",options:["뷰티","패션","건강가전","전체"],value:"뷰티"},{name:"tier",label:"팔로워",type:"select",options:["1만 이하","1만~5만","5만 이상","전체"],value:"1만~5만"},{name:"n",label:"담을 인원",placeholder:"예: 10"}]} confirmLabel="담기" doneTitle="인원을 담았습니다" doneNote="제안서에 추가됐고 견적이 다시 계산됐습니다." />
               </div>
             </div>
 
@@ -75,8 +76,8 @@ export default function Proposals() {
             <div className="actionbar">
               <span className="sum"><b>{picks.length}</b>명 담음</span>
               <div className="right">
-                <button className="btn">미리보기</button>
-                <button className="btn pri">제안서 보내기</button>
+                <Act id="pp-prev" variant="btn" label="미리보기" doneLabel="미리보기 확인함" eyebrow="PREVIEW" title="제안서 미리보기" intro={<><b>거래처가 받게 될 화면입니다</b>브랜드 페이지와 같은 모양으로 나갑니다.</>} confirmLabel="확인" doneTitle="미리보기" doneNote="실제로는 여기서 거래처가 볼 화면이 그대로 열립니다." />
+                <Act id="pp-send" variant="btn pri" label="제안서 보내기" doneLabel="제안서 발송됨" eyebrow="SEND" title="제안서 보내기" fields={[{name:"to",label:"받는 메일",placeholder:"name@company.com",required:true},{name:"due",label:"회신 희망일",type:"select",options:["1일 이내","3일 이내","이번 주 내"],value:"3일 이내"},{name:"memo",label:"덧붙일 말",type:"textarea"}]} confirmLabel="보내기" doneTitle="제안서를 보냈습니다" doneNote="브랜드 페이지 링크와 함께 발송했습니다. 열람하면 알림이 옵니다." />
               </div>
             </div>
           </div>

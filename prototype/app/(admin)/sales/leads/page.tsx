@@ -1,3 +1,4 @@
+import Act from '@/app/ui/Act'
 /* 랜딩 · 리드 — 들어온 문의를 읽고 거래처로 넘긴다. */
 
 const LEADS = [
@@ -78,8 +79,8 @@ export default function Leads() {
                 <span className="chip sel">미응대</span>
               </div>
               <div style={{ display: 'flex', gap: 9, marginTop: 'auto' }}>
-                <button className="btn pri">거래처로 등록</button>
-                <button className="btn">답장</button>
+                <Act id="ld-reg" variant="btn pri" label="거래처로 등록" doneLabel="거래처 등록됨" eyebrow="LEAD" title="거래처로 등록" fields={[{name:"nm",label:"거래처명",placeholder:"회사명",required:true},{name:"pic",label:"담당자",placeholder:"이름 · 직함"},{name:"memo",label:"메모",type:"textarea",placeholder:"문의 내용 요약"}]} confirmLabel="등록" doneTitle="거래처로 등록했습니다" doneNote="세일즈 · 거래처 목록에 추가됐습니다. 바로 제안서를 만들 수 있습니다." />
+                <Act id="ld-reply" variant="btn" label="답장" doneLabel="답장 보냄" eyebrow="REPLY" title="문의에 답장" fields={[{name:"body",label:"내용",type:"textarea",required:true,placeholder:"답변을 적어주세요"}]} confirmLabel="보내기" doneTitle="답장을 보냈습니다" doneNote="문의하신 메일로 발송했습니다. 상태가 응대 완료로 바뀝니다." />
               </div>
             </div>
           </div>
