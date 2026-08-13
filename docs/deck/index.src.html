@@ -1,0 +1,733 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SIRIAI 서비스 시스템 구축 — 발표</title>
+<style>
+/*__FONTFACES__*/
+
+:root{
+  --paper:#f4f2ed;--card:#ffffff;--card-2:#faf9f6;
+  --ink:#26221c;--ink-2:rgba(38,34,28,.66);--ink-3:rgba(38,34,28,.44);
+  --line:rgba(38,34,28,.14);--line-2:rgba(38,34,28,.07);--line-3:rgba(38,34,28,.30);
+  --accent:#4d4da7;--accent-ink:#3d3d8c;--accent-soft:rgba(77,77,167,.10);
+  --c-src:#9a9184;--c-src-soft:rgba(154,145,132,.10);
+  --c-db:#4d4da7;--c-db-soft:rgba(77,77,167,.10);
+  --c-be:#3f6b9e;--c-be-soft:rgba(63,107,158,.10);
+  --c-ui:#a75f42;--c-ui-soft:rgba(167,95,66,.10);
+  --warn:#9e3b30;--warn-soft:rgba(158,59,48,.09);
+  --shadow:0 1px 2px rgba(38,34,28,.04),0 12px 36px rgba(38,34,28,.07);
+  --lift:0 2px 4px rgba(38,34,28,.06),0 14px 34px rgba(38,34,28,.11);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --kr:'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
+  --lt:'Inter Tight','Pretendard',Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#16140f;--card:#1e1b15;--card-2:#242119;
+    --ink:#f1ede4;--ink-2:rgba(241,237,228,.63);--ink-3:rgba(241,237,228,.41);
+    --line:rgba(241,237,228,.15);--line-2:rgba(241,237,228,.08);--line-3:rgba(241,237,228,.30);
+    --accent:#9c9cee;--accent-ink:#b4b4f4;--accent-soft:rgba(156,156,238,.13);
+    --c-src:#8d8477;--c-src-soft:rgba(141,132,119,.13);
+    --c-db:#9c9cee;--c-db-soft:rgba(156,156,238,.13);
+    --c-be:#85b0e0;--c-be-soft:rgba(133,176,224,.13);
+    --c-ui:#e09b78;--c-ui-soft:rgba(224,155,120,.13);
+    --warn:#e58a7c;--warn-soft:rgba(229,138,124,.13);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 36px rgba(0,0,0,.32);
+    --lift:0 2px 4px rgba(0,0,0,.35),0 14px 34px rgba(0,0,0,.42);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16140f;--card:#1e1b15;--card-2:#242119;
+  --ink:#f1ede4;--ink-2:rgba(241,237,228,.63);--ink-3:rgba(241,237,228,.41);
+  --line:rgba(241,237,228,.15);--line-2:rgba(241,237,228,.08);--line-3:rgba(241,237,228,.30);
+  --accent:#9c9cee;--accent-ink:#b4b4f4;--accent-soft:rgba(156,156,238,.13);
+  --c-src:#8d8477;--c-src-soft:rgba(141,132,119,.13);
+  --c-db:#9c9cee;--c-db-soft:rgba(156,156,238,.13);
+  --c-be:#85b0e0;--c-be-soft:rgba(133,176,224,.13);
+  --c-ui:#e09b78;--c-ui-soft:rgba(224,155,120,.13);
+  --warn:#e58a7c;--warn-soft:rgba(229,138,124,.13);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 36px rgba(0,0,0,.32);
+  --lift:0 2px 4px rgba(0,0,0,.35),0 14px 34px rgba(0,0,0,.42);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--kr);letter-spacing:-.012em;line-height:1.6;word-break:keep-all;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:clamp(10px,1.8vw,26px);gap:clamp(8px,1vw,14px);
+}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* ═══ deck ═══ */
+.deck{
+  container-type:inline-size;position:relative;
+  width:100%;max-width:1440px;aspect-ratio:16/9;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.sl{
+  position:absolute;inset:0;padding:3.4cqw 3.6cqw 3cqw;
+  display:flex;flex-direction:column;gap:1.6cqw;
+  opacity:0;visibility:hidden;transform:translateY(10px);
+  transition:opacity .34s var(--ease),transform .34s var(--ease),visibility .34s;
+}
+.sl.on{opacity:1;visibility:visible;transform:none}
+
+/* ── slide head ── */
+.eb{
+  font-family:var(--lt);font-size:max(9px,.72cqw);font-weight:500;letter-spacing:.2em;
+  color:var(--ink-3);display:flex;align-items:center;gap:.8cqw;flex:none;
+}
+.eb::after{content:"";flex:1;height:1px;background:var(--line-2)}
+.h{
+  font-size:max(20px,2.7cqw);font-weight:700;letter-spacing:-.036em;line-height:1.12;
+  margin:0;flex:none;text-wrap:balance;
+}
+.sub{font-size:max(12px,1.02cqw);color:var(--ink-2);letter-spacing:-.014em;line-height:1.5;flex:none;max-width:52ch}
+
+/* ── body area ── */
+.bd{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+.grid{display:grid;gap:1.1cqw}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+
+/* ── item ── */
+.it{
+  appearance:none;font:inherit;color:inherit;text-align:left;cursor:pointer;
+  background:var(--card-2);border:1px solid var(--line);border-radius:.75cqw;
+  padding:1.15cqw 1.3cqw;display:flex;flex-direction:column;gap:.2cqw;min-width:0;
+  transition:background .18s var(--ease),border-color .18s var(--ease),
+             box-shadow .18s var(--ease),transform .18s var(--ease),opacity .18s var(--ease);
+}
+.it .t{font-size:max(13.5px,1.42cqw);font-weight:600;letter-spacing:-.028em;line-height:1.25}
+.it .s{font-size:max(10.5px,.99cqw);font-weight:400;letter-spacing:-.008em;color:var(--ink-3);line-height:1.35}
+.it .n{
+  font-family:var(--lt);font-size:max(15px,1.9cqw);font-weight:600;letter-spacing:-.03em;
+  line-height:1;font-variant-numeric:tabular-nums;margin-bottom:.15cqw;
+}
+.it:hover,.it:focus-visible{background:var(--cs,var(--accent-soft));border-color:var(--cc,var(--accent));box-shadow:var(--lift);transform:translateY(-2px)}
+.it.pin{background:var(--cs,var(--accent-soft));border-color:var(--cc,var(--accent));border-width:1.5px;box-shadow:var(--lift)}
+.it.pin .t,.it.pin .n{color:var(--cc,var(--accent))}
+.sl.dim .it:not(:hover):not(.pin){opacity:.34}
+.it[data-c="src"]{--cc:var(--c-src);--cs:var(--c-src-soft)}
+.it[data-c="db"] {--cc:var(--c-db); --cs:var(--c-db-soft)}
+.it[data-c="be"] {--cc:var(--c-be); --cs:var(--c-be-soft)}
+.it[data-c="ui"] {--cc:var(--c-ui); --cs:var(--c-ui-soft)}
+.it[data-c="warn"]{--cc:var(--warn);--cs:var(--warn-soft)}
+.it[data-c="src"]{border-style:dashed}
+
+/* ── layered (s3) ── */
+.lay{display:flex;flex-direction:column;gap:.85cqw}
+.lay .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1cqw}
+.lay .band{width:100%}
+.lay .tie{height:1.5cqw;position:relative;flex:none}
+.lay .tie::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-3)}
+
+/* ── funnel (s6) ── */
+.fun{display:flex;flex-direction:column;gap:.55cqw}
+.fb{
+  position:relative;overflow:hidden;flex-direction:row;align-items:center;gap:1.1cqw;
+  padding:.95cqw 1.3cqw;
+}
+.fb::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w,100%);
+  background:var(--cs);border-right:1.5px solid var(--cc);
+}
+.fb.new::before{background:none;border-right-style:dashed}
+.fb > *{position:relative;z-index:1}
+.fb .n{margin:0;min-width:7cqw;font-size:max(13px,1.5cqw)}
+.fb .t{font-size:max(11px,1.06cqw);font-weight:600}
+.fb .pc{
+  margin-left:auto;font-family:var(--lt);font-size:max(9px,.82cqw);font-weight:500;
+  letter-spacing:.06em;color:var(--ink-3);font-variant-numeric:tabular-nums;
+}
+
+/* ── big number (s7) ── */
+.big{display:flex;align-items:baseline;gap:1.4cqw;flex:none;margin-bottom:.4cqw}
+.big b{font-family:var(--lt);font-size:max(30px,4.6cqw);font-weight:600;letter-spacing:-.042em;line-height:.95;font-variant-numeric:tabular-nums}
+.big span{font-size:max(11px,1.02cqw);color:var(--ink-3);letter-spacing:-.01em;line-height:1.4}
+
+/* ── cover ── */
+.sl.cover{justify-content:center;gap:0}
+.cover .h{font-size:max(26px,4.2cqw);letter-spacing:-.042em;margin-top:1.4cqw}
+.cover .sub{font-size:max(13px,1.3cqw);margin-top:1.1cqw;color:var(--ink-2)}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:.7cqw;overflow:hidden;margin-top:3.4cqw}
+.facts div{background:var(--card-2);padding:1.2cqw 1.3cqw;display:flex;flex-direction:column;gap:.3cqw}
+.facts b{font-family:var(--lt);font-size:max(18px,2.5cqw);font-weight:600;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.facts b i{font-style:normal;font-size:.44em;font-weight:500;color:var(--ink-3);margin-left:.2em}
+.facts span{font-size:max(9.5px,.82cqw);color:var(--ink-3);letter-spacing:-.006em;line-height:1.35}
+
+/* ── detail ── */
+.det{
+  flex:0 0 auto;height:14.4cqw;min-height:158px;
+  background:var(--card-2);border:1px solid var(--line);border-left:3px solid var(--dc,var(--line-3));
+  border-radius:.7cqw;padding:1.3cqw 1.7cqw;
+  display:grid;grid-template-columns:19cqw 1fr;gap:1.9cqw;overflow:hidden;
+}
+.det-l{display:flex;flex-direction:column;gap:.24cqw;min-width:0}
+.det-k{
+  font-family:var(--lt);font-size:max(10px,.78cqw);font-weight:500;letter-spacing:.16em;
+  color:var(--dc,var(--ink-3));display:flex;align-items:center;gap:.5cqw;
+}
+.det-k .chip{font-size:max(9px,.66cqw);letter-spacing:.1em;padding:.14cqw .5cqw;border-radius:3px;
+  background:var(--accent-soft);color:var(--accent-ink)}
+.det-t{font-size:max(16px,1.66cqw);font-weight:700;letter-spacing:-.034em;line-height:1.18;margin-top:.2cqw}
+.det-m{font-family:var(--lt);font-size:max(11px,.96cqw);color:var(--ink-3);letter-spacing:-.004em;line-height:1.35}
+.det-r{columns:2;column-gap:2.4cqw;align-content:start;min-width:0;overflow:hidden}
+.det-r p{
+  margin:0 0 .62cqw;font-size:max(12.5px,1.16cqw);line-height:1.5;color:var(--ink-2);
+  letter-spacing:-.012em;padding-left:1.15cqw;position:relative;break-inside:avoid;
+}
+.det-r p::before{content:"";position:absolute;left:0;top:.66em;width:.55cqw;min-width:6px;height:1px;background:var(--line-3)}
+.det-r p strong{color:var(--ink);font-weight:600}
+.det-r p.hl{color:var(--ink)}
+.det-r p.hl::before{background:var(--dc,var(--line-3));height:2px;top:.62em}
+.det-r.one{columns:1}
+
+/* 기본 안내 상태 — 크게, 가운데 */
+.det.hint{grid-template-columns:1fr;align-items:center;justify-items:center}
+.det.hint .det-l{display:none}
+.det.hint .det-r{columns:1;text-align:center}
+.det.hint .det-r p{
+  margin:0;font-size:max(13px,1.34cqw);color:var(--ink-3);padding-left:0;
+  letter-spacing:-.018em;line-height:1.5;
+}
+.det.hint .det-r p::before{display:none}
+.det.hint .det-r p strong{color:var(--ink-2);font-weight:600}
+
+/* ── progress ── */
+.prog{position:absolute;top:0;left:0;right:0;height:2px;background:var(--line-2);z-index:5}
+.prog i{display:block;height:100%;background:var(--accent);transition:width .34s var(--ease)}
+
+/* ═══ nav bar ═══ */
+.nav{
+  width:100%;max-width:1440px;display:flex;align-items:center;gap:14px;
+  font-family:var(--lt);font-size:11.5px;font-weight:500;letter-spacing:.04em;color:var(--ink-3);
+}
+.nav .mk{letter-spacing:.26em;font-weight:600;color:var(--ink-2)}
+.dots{display:flex;gap:5px;margin:0 auto}
+.dots button{
+  appearance:none;border:0;padding:0;cursor:pointer;background:var(--line-3);
+  width:7px;height:7px;border-radius:50%;opacity:.45;transition:opacity .2s,background .2s,transform .2s;
+}
+.dots button:hover{opacity:.8}
+.dots button.on{background:var(--accent);opacity:1;transform:scale(1.25)}
+.nav .btn{
+  appearance:none;font:inherit;color:var(--ink-2);cursor:pointer;
+  background:var(--card);border:1px solid var(--line);border-radius:7px;
+  padding:5px 11px;transition:background .2s,color .2s,border-color .2s;
+}
+.nav .btn:hover{background:var(--card-2);color:var(--ink);border-color:var(--line-3)}
+.nav .btn[disabled]{opacity:.32;cursor:default}
+.nav .cnt{font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
+
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+
+/* ── 좁은 화면 ── */
+@media(max-width:860px){
+  body{justify-content:flex-start;padding:10px}
+  .deck{aspect-ratio:auto;min-height:auto}
+  .sl{position:relative;inset:auto;padding:22px 18px;gap:14px;display:none;transform:none}
+  .sl.on{display:flex;opacity:1;visibility:visible}
+  .g3,.g4,.g5,.facts,.lay .row3{grid-template-columns:1fr 1fr}
+  .grid{gap:8px}
+  .it{border-radius:9px;padding:11px 12px}
+  .det{height:auto;min-height:0;grid-template-columns:1fr;gap:12px;padding:15px;border-radius:9px}
+  .det-r,.det-r.one{columns:1}
+  .det-r p{margin-bottom:8px;padding-left:13px}
+  .det-r p::before{width:6px}
+  .det.hint{padding:20px 15px}
+  .fb{gap:10px;padding:10px 12px}
+  .fb .n{min-width:64px}
+  .big{gap:12px;flex-wrap:wrap}
+  .nav .cnt{min-width:44px}
+}
+@media(max-width:520px){.g3,.g4,.g5,.facts,.lay .row3{grid-template-columns:1fr}}
+</style>
+
+<div class="deck" id="deck">
+  <div class="prog"><i id="prog"></i></div>
+
+  <!-- ══ 1 · 표지 ══ -->
+  <section class="sl cover">
+    <p class="eb">PROJECT KICKOFF · 2026.08</p>
+    <h1 class="h">SIRIAI 서비스 시스템 구축</h1>
+    <p class="sub">자산 통합 및 운영 시스템을 구축합니다.</p>
+    <div class="facts">
+      <div><b>30<i>일</i></b><span>착수부터 실제 운영 전환까지</span></div>
+      <div><b>4<i>인</i></b><span>4개 파트로 나눠 동시 진행</span></div>
+      <div><b>3<i>개</i></b><span>어드민 · 브랜드 · 인플루언서</span></div>
+      <div><b>20,347</b><span>옮겨올 인플루언서 명단</span></div>
+    </div>
+  </section>
+
+  <!-- ══ 2 · 현재 ══ -->
+  <section class="sl">
+    <p class="eb">01 · 현재</p>
+    <h2 class="h">현재 데이터가 6곳에 나누어져 있음</h2>
+    <div class="bd">
+      <div class="grid g3">
+        <button class="it" data-c="src" data-d="a1"><span class="t">마스터시트</span><span class="s">프로젝트관리 · 34컬럼</span></button>
+        <button class="it" data-c="src" data-d="a2"><span class="t">캠페인 진행시트</span><span class="s">브랜드별 통합 · 탭 = 회차</span></button>
+        <button class="it" data-c="src" data-d="a3"><span class="t">콘텐츠 검수시트</span><span class="s">3단계 체크리스트</span></button>
+        <button class="it" data-c="src" data-d="a4"><span class="t">가이드 · 지원 페이지</span><span class="s">캠페인별 자체 웹페이지</span></button>
+        <button class="it" data-c="src" data-d="a5"><span class="t">슬랙 · 드라이브</span><span class="s">정산자료 · 콘텐츠 보관</span></button>
+        <button class="it" data-c="src" data-d="a6"><span class="t">NoxInfluencer</span><span class="s">원본 20,347건</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 3 · 구조 ══ -->
+  <section class="sl">
+    <p class="eb">02 · 구조</p>
+    <h2 class="h">하나의 데이터베이스를 구축해 전체 프로덕트에 활용합니다</h2>
+    <div class="bd">
+      <div class="lay">
+        <div class="row3">
+          <button class="it" data-c="db" data-d="s1"><span class="t">어드민</span><span class="s">내부 운영 전체</span></button>
+          <button class="it" data-c="be" data-d="s2"><span class="t">브랜드</span><span class="s">고객사 · 광고 랜딩 겸용</span></button>
+          <button class="it" data-c="ui" data-d="s3"><span class="t">인플루언서</span><span class="s">개인 코드 진입</span></button>
+        </div>
+        <div class="tie"></div>
+        <button class="it band" data-d="s4"><span class="t">서버 · 업무 처리 · 권한 관리</span><span class="s">누가 무엇을 볼 수 있는지 데이터베이스에서 정합니다</span></button>
+        <div class="tie"></div>
+        <button class="it band" data-c="db" data-d="s5"><span class="t">PostgreSQL</span><span class="s">브랜드 · 캠페인 · 인플루언서 · 캠페인 참여 · 정산</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 4 · 도메인 ══ -->
+  <section class="sl">
+    <p class="eb">03 · 데이터</p>
+    <h2 class="h">필요한 핵심 데이터 구분</h2>
+    <p class="sub">진행시트 한 줄이 <strong>캠페인 참여</strong> 한 행에 해당합니다.</p>
+    <div class="bd">
+      <div class="grid g4">
+        <button class="it" data-c="be" data-d="d1"><span class="t">브랜드</span><span class="s">거래처 · 담당자 · 접근코드</span></button>
+        <button class="it" data-c="db" data-d="d2"><span class="t">캠페인</span><span class="s">일정 · 상태 · 산출물</span></button>
+        <button class="it" data-c="db" data-d="d3"><span class="t">캠페인 참여</span><span class="s">선정 · 배송 · 검수 · 정산</span></button>
+        <button class="it" data-c="ui" data-d="d4"><span class="t">인플루언서</span><span class="s">사람 · 계정 · 개인정보</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 5 · 어드민 ══ -->
+  <section class="sl">
+    <p class="eb">04 · 어드민</p>
+    <h2 class="h">어드민 구조</h2>
+    <p class="sub">매일 쓰는 영역과 주기적으로 쓰는 영역을 내비게이션에서 분리합니다.</p>
+    <div class="bd">
+      <div class="grid g4">
+        <button class="it" data-d="m1"><span class="t">홈</span><span class="s">오늘 할 일</span></button>
+        <button class="it" data-d="m2"><span class="t">대시보드</span><span class="s">매출 · 진행 지표</span></button>
+        <button class="it" data-d="m3"><span class="t">세일즈</span><span class="s">거래처 · 제안</span></button>
+        <button class="it" data-d="m4"><span class="t">캠페인</span><span class="s">모집 · 선정 · 검수</span></button>
+        <button class="it" data-c="src" data-d="m5"><span class="t">정산</span><span class="s">하단 분리 영역</span></button>
+        <button class="it" data-c="src" data-d="m6"><span class="t">관리 · 설정</span><span class="s">하단 분리 영역</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 6 · 인플루언서 DB ══ -->
+  <section class="sl">
+    <p class="eb">05 · 인플루언서 데이터</p>
+    <h2 class="h">인플루언서 DB 관리</h2>
+    <p class="sub">원본 20,347건을 연락 가능 여부와 협업 경험 기준으로 다섯 단계로 나눕니다.</p>
+    <div class="bd">
+      <div class="fun">
+        <button class="it fb" data-c="src" data-d="f0" style="--w:100%;border-style:solid">
+          <span class="n">20,347</span><span class="t">원본 전체</span><span class="pc">100%</span></button>
+        <button class="it fb" data-c="be" data-d="f1" style="--w:47%">
+          <span class="n">9,532</span><span class="t">연락 가능 명단 — 이메일 확보</span><span class="pc">47%</span></button>
+        <button class="it fb" data-c="be" data-d="f2" style="--w:29%">
+          <span class="n">5,929</span><span class="t">컨택 이력 있음</span><span class="pc">29%</span></button>
+        <button class="it fb new" data-c="ui" data-d="f3" style="--w:14%">
+          <span class="n">구축</span><span class="t">협업 경험 명단</span><span class="pc">규모 미확정</span></button>
+        <button class="it fb new" data-c="ui" data-d="f4" style="--w:8%">
+          <span class="n">구축</span><span class="t">바로 섭외 가능 명단</span><span class="pc">규모 미확정</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 7 · 비용 ══ -->
+  <section class="sl">
+    <p class="eb">06 · 비용</p>
+    <h2 class="h">팀 플랜 운용 비용</h2>
+    <div class="bd">
+      <div class="big">
+        <b>$521</b>
+        <span>구축 기간 월 합계<br>원화 환산 약 ₩729,000 · 환율 ₩1,400/$ 가정</span>
+      </div>
+      <div class="grid g5">
+        <button class="it" data-c="db" data-d="c1"><span class="n">$375</span><span class="t">Claude Premium</span><span class="s">3시트 · 개발 주력</span></button>
+        <button class="it" data-d="c2"><span class="n">$25</span><span class="t">Claude Standard</span><span class="s">1시트 · 기획 · 리뷰</span></button>
+        <button class="it" data-d="c3"><span class="n">$80</span><span class="t">Vercel Pro</span><span class="s">4시트 · 배포</span></button>
+        <button class="it" data-d="c4"><span class="n">$25</span><span class="t">Supabase Pro</span><span class="s">DB · 인증 · 스토리지</span></button>
+        <button class="it" data-d="c5"><span class="n">$16</span><span class="t">GitHub Team</span><span class="s">4시트 · 저장소</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 8 · 일정 ══ -->
+  <section class="sl">
+    <p class="eb">07 · 일정</p>
+    <h2 class="h">프로젝트 진행 타임라인</h2>
+    <p class="sub">30일 · 4개 파트 동시 진행. 화면은 데이터가 있어야 만들 수 있어서 1주차에 데이터부터 세웁니다.</p>
+    <div class="bd">
+      <div class="grid g4">
+        <button class="it" data-c="db" data-d="w1"><span class="n">Week 1</span><span class="t">데이터 기반</span><span class="s">데이터 구조 확정 · 시트 옮기기</span></button>
+        <button class="it" data-c="db" data-d="w2"><span class="n">Week 2</span><span class="t">운영 옮기기</span><span class="s">어드민 내부 시험판</span></button>
+        <button class="it" data-c="be" data-d="w3"><span class="n">Week 3</span><span class="t">외부 화면</span><span class="s">브랜드 · 인플루언서 화면</span></button>
+        <button class="it" data-c="ui" data-d="w4"><span class="n">Week 4</span><span class="t">정산 · 마감</span><span class="s">실제 운영 전환</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 9 · 결정 ══ -->
+  <section class="sl">
+    <p class="eb">08 · 결정</p>
+    <h2 class="h">착수 전 결정이 필요한 다섯 가지</h2>
+    <p class="sub">결정 내용에 따라 구현이 달라지는 항목입니다.</p>
+    <div class="bd">
+      <div class="grid g5">
+        <button class="it" data-c="warn" data-d="k1"><span class="t">캠페인<br>진행 단계 정의</span><span class="s">보드에 들어갈 단계</span></button>
+        <button class="it" data-c="warn" data-d="k2"><span class="t">시트<br>전환 방식</span><span class="s">언제 · 어떻게 끊을지</span></button>
+        <button class="it" data-c="warn" data-d="k3"><span class="t">정산<br>범위</span><span class="s">발급까지 여부</span></button>
+        <button class="it" data-c="warn" data-d="k4"><span class="t">인플루언서<br>정산자료</span><span class="s">수집 범위</span></button>
+        <button class="it" data-c="warn" data-d="k5"><span class="t">어드민<br>인증 주체</span><span class="s">계정 · 권한 등급</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 10 · 리스크 ══ -->
+  <section class="sl">
+    <p class="eb">09 · 리스크</p>
+    <h2 class="h">확인된 리스크</h2>
+    <div class="bd">
+      <div class="grid g5">
+        <button class="it" data-c="warn" data-d="r1"><span class="n">R1</span><span class="t">신원 연결 실패</span><span class="s">동일인 판정</span></button>
+        <button class="it" data-c="warn" data-d="r2"><span class="n">R2</span><span class="t">개인정보 노출</span><span class="s">실명 · 주소</span></button>
+        <button class="it" data-c="warn" data-d="r3"><span class="n">R3</span><span class="t">범위 초과</span><span class="s">30일 안에 정산까지</span></button>
+        <button class="it" data-c="warn" data-d="r4"><span class="n">R4</span><span class="t">데이터 분기</span><span class="s">병행 운영 중</span></button>
+        <button class="it" data-c="warn" data-d="r5"><span class="n">R5</span><span class="t">거래처 의존</span><span class="s">한 곳이 40%</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+
+  <!-- ══ 11 · 다음 ══ -->
+  <section class="sl">
+    <p class="eb">10 · 다음</p>
+    <h2 class="h">승인 즉시 착수할 것</h2>
+    <p class="sub">아래 네 가지는 개발과 별개로 처리에 시간이 걸려서 먼저 시작합니다.</p>
+    <div class="bd">
+      <div class="grid g4">
+        <button class="it" data-c="warn" data-d="n1"><span class="t">알림톡 템플릿 신청</span><span class="s">심사 3–5 영업일</span></button>
+        <button class="it" data-d="n2"><span class="t">Supabase 환경 구성</span><span class="s">개발 · 운영 분리</span></button>
+        <button class="it" data-d="n3"><span class="t">GitHub 조직 개설</span><span class="s">4시트 · 브랜치 전략</span></button>
+        <button class="it" data-d="n4"><span class="t">개인정보 문안 준비</span><span class="s">처리방침 · 동의문</span></button>
+      </div>
+    </div>
+    <div class="det"></div>
+  </section>
+</div>
+
+<div class="nav">
+  <span class="mk">SIRIAI</span>
+  <button class="btn" id="prev" aria-label="이전">←</button>
+  <span class="cnt" id="cnt">1 / 11</span>
+  <button class="btn" id="next" aria-label="다음">→</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn" id="fs">전체화면</button>
+</div>
+
+<script>
+/* ── 상세 데이터 ─────────────────────────────────────── */
+const D = {
+ a1:{k:'옮겨올 데이터',t:'마스터시트',m:'SIRIAI 프로젝트관리 · 34개 항목',b:[
+   '캠페인 약 66건 (26년 2–8월). 모든 하위 시트 링크가 여기서 갈라집니다.',
+   '프로젝트 정보 / 마감일정 / 콘텐츠 업로드 / 매출 네 영역',
+   ['매출을 잡는 기준은 <strong>세금계산서 발급일</strong>',1]]},
+ a2:{k:'옮겨올 데이터',t:'캠페인 진행시트',m:'브랜드별 통합 시트 · 탭 하나가 캠페인 한 회차',b:[
+   '선정 여부 · 제안비용 · 담당자 코멘트',
+   '성함 · 연락처 · 주소지 · 송장번호 · 출고일',
+   ['이 시트의 <strong>한 줄이 캠페인 참여 한 건</strong>이 됩니다.',1]]},
+ a3:{k:'옮겨올 데이터',t:'콘텐츠 검수시트',m:'사전관리 / 콘텐츠검수 / 사후관리',b:[
+   '사전관리 — 선정안내 · 개별요청 · 답변',
+   '콘텐츠검수 — 업로드 · 가이드라인 준수 · 해시태그 · 가드닝',
+   '사후관리 — 고료 · 정산자료 · 드라이브 저장',
+   ['이 체크리스트가 그대로 <strong>어드민 캠페인 화면의 진행 순서</strong>가 됩니다.',1]]},
+ a4:{k:'옮겨올 데이터',t:'가이드 · 지원 페이지',m:'캠페인마다 만드는 자체 웹페이지',b:[
+   '26년 2–3월은 노션으로 만들다가 4월부터 자체 페이지로 바꿨습니다.',
+   'moev-invite · teumgyul · gnpowersiriai254 등 캠페인마다 따로 배포',
+   '하반기 공용 소개 페이지도 같은 방식 — oddtype-inviteb · siriai-skincare',
+   ['캠페인마다 페이지를 새로 만드는 이 일을 <strong>인플루언서 페이지가 대신합니다.</strong>',1]]},
+ a5:{k:'옮겨올 데이터',t:'슬랙 · 드라이브',m:'정산자료 수령 · 콘텐츠 보관',b:[
+   '인플루언서 정산자료를 슬랙으로 받고 드라이브에 보관 중',
+   ['주민번호 · 통장사본이 <strong>그대로 오갑니다</strong> — 시스템으로 옮기는 것 자체가 보안 개선입니다.',1]]},
+ a6:{k:'옮겨올 데이터',t:'NoxInfluencer',m:'원본 20,347건',b:[
+   '유튜브 867 · 인스타 16,268 · 틱톡 3,212',
+   '이메일 확보 9,532건 (46.8%)',
+   '폴더 40종이 사실상 분류표 역할을 하고 있습니다.',
+   ['<strong>협업 여부 항목은 비어 있습니다</strong> — 누구와 일했는지는 진행시트를 되짚어 만들어야 합니다.',1]]},
+
+ s1:{k:'화면',t:'어드민',m:'내부 운영 전체',b:[
+   '홈 · 대시보드 · 세일즈 · 캠페인',
+   '메뉴 아래쪽 — 정산 · 관리(설정)',
+   '캠페인 화면은 지금 쓰는 검수 체크리스트를 그대로 진행 순서로 씁니다.']},
+ s2:{k:'화면',t:'브랜드',m:'고객사 · 코드를 받아 들어옴',b:[
+   '진행 캠페인 현황 · 선정 인플루언서 · 콘텐츠 링크 · 리포트',
+   ['기존 <strong>siriai-sales</strong>의 코드 입력 방식을 그대로 넓힙니다.',1],
+   '조금 바꿔서 광고 / 영업메일 도착 페이지로도 씁니다.']},
+ s3:{k:'화면',t:'인플루언서',m:'개인 코드를 받아 들어옴',b:[
+   '진행중인 캠페인 · 지원 가능한 캠페인',
+   '콘텐츠 제출 · 정산자료 제출',
+   '본인 것만 보입니다 — 지금 시트로 하는 것보다 노출 범위가 줄어듭니다.']},
+ s4:{k:'서버',t:'서버 · 업무 처리',m:'권한 관리 · 조회 기록',b:[
+   '캠페인 단계 넘기기 · 참여 진행 흐름 · 정산 집계',
+   ['누가 무엇을 볼 수 있는지를 <strong>화면이 아니라 데이터베이스에서</strong> 정합니다.',1],
+   '역할에 따라 개인정보를 가리고, 누가 언제 열어봤는지 남깁니다.']},
+ s5:{k:'데이터',t:'데이터베이스',m:'PostgreSQL · Supabase',b:[
+   '브랜드 · 캠페인 · 캠페인 참여 · 인플루언서 · 정산 · 조회 기록',
+   ['실명 · 연락처 · 주소는 <strong>항목 단위로 암호화</strong>합니다.',1],
+   '세 화면이 모두 이 한 곳만 바라봅니다.']},
+
+ d1:{k:'핵심 데이터',t:'브랜드',m:'거래처 정보',b:[
+   '거래처 약 20개사 · 담당자 · 계약 · 단가 정책',
+   '브랜드 페이지 코드를 발급하는 단위',
+   '무신사가 캠페인의 약 40%']},
+ d2:{k:'핵심 데이터',t:'캠페인',m:'캠페인 한 건의 정보',b:[
+   '캠페인 코드 · 귀속년월 · 직접 / 타대행 · 국내 / 해외',
+   '납품예정일 · 시작일 · 종료일',
+   '제공 수 · 선정 수 · 업로드 수 · 컨펌율 · 업로드율']},
+ d3:{k:'핵심 데이터',t:'캠페인 참여',m:'누가 어느 캠페인에 참여했는가',b:[
+   ['캠페인과 인플루언서를 잇는 <strong>실제 작업 단위</strong>입니다.',1],
+   '선정 · 제안비용 · 응답',
+   '배송 · 송장 · 출고일',
+   '콘텐츠 · 검수 체크리스트',
+   '고료 · 정산자료']},
+ d4:{k:'핵심 데이터',t:'인플루언서',m:'사람 · 계정 · 개인정보',b:[
+   ['<strong>사람과 계정을 따로</strong> 저장합니다 — 한 사람이 인스타 · 유튜브 · 틱톡을 같이 가질 수 있습니다.',1],
+   '시점별 지표 기록 · 분류 태그 · 참여 이력',
+   '같은 사람인지 판별하는 기준은 형식을 통일한 계정 주소입니다.']},
+
+ m1:{k:'어드민',t:'홈',m:'오늘 할 일',b:['마감 임박 캠페인','알림 · 승인 대기']},
+ m2:{k:'어드민',t:'대시보드',m:'매출 · 진행 지표',b:[
+   '매출 · 순이익 · 마진율','업로드율 · 컨펌율','미수금 · 입금 현황','거래처별 · 월별 추이']},
+ m3:{k:'어드민',t:'세일즈',m:'거래처 · 제안',b:[
+   '거래처 · 담당자','제안 · 견적','브랜드 페이지 발급','랜딩 · 리드']},
+ m4:{k:'어드민',t:'캠페인',m:'모집 · 선정 · 검수',b:[
+   '캠페인 목록 · 보드','모집 · 선정','배송 · 콘텐츠','검수 체크리스트','인플루언서 명단']},
+ m5:{k:'하단 분리',t:'정산',m:'계산서 발급일 기준',b:[
+   '월간 · 연간 매출 집계','인플루언서 정산','정산자료 · 원천징수',
+   ['매일 들어가는 곳이 아니라서 <strong>메뉴 아래쪽으로 뺍니다.</strong>',1]]},
+ m6:{k:'하단 분리',t:'관리 · 설정',m:'',b:[
+   '구성원 · 권한','알림 문구','코드 발급','조회 기록']},
+
+ f0:{k:'1단계',t:'원본 전체',m:'20,347건',b:[
+   '유튜브 867 · 인스타 16,268 · 틱톡 3,212',
+   '한국 약 62% · 일본 약 38%']},
+ f1:{k:'2단계',t:'연락 가능 명단',m:'9,532건 · 이메일 확보',b:[
+   '유튜브 570 · 인스타 7,826 · 틱톡 1,136',
+   ['메일을 보낼 수 있는 사람이 <strong>실제로는 이만큼</strong>입니다.',1]]},
+ f2:{k:'3단계',t:'연락해본 적 있음',m:'5,929건',b:[
+   '메일을 보냈거나 답을 받은 기록이 남은 인원',
+   '답장 잘 하는 정도(10,356건)는 단계가 아니라 각 사람에게 붙는 점수입니다.']},
+ f3:{k:'4단계',t:'협업 경험 명단',m:'새로 만들어야 함 · 규모 미확정',b:[
+   ['원본에 없습니다. <strong>진행시트를 되짚어</strong> 새로 만듭니다.',1],
+   '같은 사람인지는 계정 주소로 판별합니다 — 표시 이름은 자주 바뀌어 못 씁니다.',
+   '1주차에 데이터를 다 옮겨야 실제 규모가 나옵니다.']},
+ f4:{k:'5단계',t:'바로 섭외 가능 명단',m:'새로 만들어야 함 · 규모 미확정',b:[
+   '실명 · 연락처 · 정산정보까지 다 있는 인원',
+   ['&ldquo;지금 바로 부를 수 있는 사람&rdquo; 목록이 됩니다.',1]]},
+
+ c1:{k:'비용',t:'Claude Team — Premium',m:'$125 / 시트 · 3시트',b:[
+   '개발 주력 3인','Max 급 사용량',
+   ['연간 약정 시 $100 / 시트지만 12개월 묶입니다.',1]]},
+ c2:{k:'비용',t:'Claude Team — Standard',m:'$25 / 시트 · 1시트',b:['기획 · 리뷰 1인','Pro 급 사용량']},
+ c3:{k:'비용',t:'Vercel Pro',m:'$20 / 시트 · 4시트',b:[
+   '서비스 올리는 곳. 작업 중인 버전도 링크로 미리 볼 수 있습니다.',
+   '시트당 $20 사용량 크레딧 포함',
+   '기존 siriai-sales · 홈페이지가 이미 여기서 운영 중']},
+ c4:{k:'비용',t:'Supabase Pro',m:'$25 / 월 · 조직 단위',b:[
+   '데이터베이스 · 로그인 · 파일 보관을 한 곳에서 처리',
+   '브랜드와 인플루언서가 서로의 데이터를 못 보게 막아줍니다.']},
+ c5:{k:'비용',t:'GitHub Team',m:'$4 / 인 · 4인',b:['코드 저장 · 코드 검토 · 자동 배포',
+   ['릴리스 후 최소 운영 구성은 <strong>월 $231 (≈₩348,000)</strong>',1]]},
+
+ w1:{k:'WEEK 1',t:'데이터 기반',m:'주차 목표 — 데이터 구조 확정 · 1차 옮기기 완료',b:[
+   ['서버 — 데이터 구조 확정 · 권한 설계',1],
+   ['데이터 — 시트를 데이터베이스로 옮기기 · 계정 주소 형식 통일',1],
+   '화면 — 디자인 기준 정리 · 어드민 뼈대',
+   ['인프라 — 개발 환경 구성 · <strong>알림톡 문구 심사 신청</strong>',1]]},
+ w2:{k:'WEEK 2',t:'운영 옮기기',m:'주차 목표 — 어드민 내부 시험판',b:[
+   ['서버 — 캠페인 처리 로직 · 검수 단계 넘기기',1],
+   ['데이터 — 인플루언서 5단계 명단 · 사람 직접 합치는 화면',1],
+   ['화면 — 대시보드 · 캠페인 목록 / 상세',1],
+   '인프라 — 역할 · 권한 · 조회 기록']},
+ w3:{k:'WEEK 3',t:'외부 화면',m:'주차 목표 — 세 화면 연결 완료',b:[
+   '서버 — 브랜드 · 인플루언서용 조회 기능',
+   '데이터 — 분류 기준 정리 · 접속 기록',
+   ['화면 — 브랜드 페이지 · 인플루언서 페이지',1],
+   ['인프라 — 알림 발송 연결',1]]},
+ w4:{k:'WEEK 4',t:'정산 · 마감',m:'주차 목표 — 실제 운영 시작',b:[
+   ['서버 — 정산 집계 (계산서 발급일 기준)',1],
+   '데이터 — 인플루언서 정산 · 정산자료 암호화',
+   '화면 — 정산 화면 · 관리 설정 화면',
+   ['인프라 — 최종 점검 · 운영 전환 · 인수인계',1]]},
+
+ k1:{k:'정해야 시작 가능',t:'캠페인 진행 단계 정의',m:'',b:[
+   '시트에는 종료 · 상시 두 가지만 실제로 쓰이고 있습니다.',
+   ['중간 단계를 어떻게 나눌지가 <strong>캠페인 보드의 칸</strong>이 됩니다.',1]]},
+ k2:{k:'정해야 시작 가능',t:'시트 전환 방식',m:'',b:[
+   '완전히 옮기기 / 시트는 보기 전용으로 남기기 / 양쪽 계속 맞추기',
+   ['양쪽을 계속 맞추는 건 30일 안에 불가능합니다.',1],
+   '끊는 날짜를 정해야 두 곳의 내용이 어긋나는 걸 막습니다.']},
+ k3:{k:'정해야 시작 가능',t:'정산 범위',m:'',b:[
+   '계산서 발급까지 시스템이 하는지',
+   '발급일과 금액만 기록하고 발급은 쓰던 도구로 하는지',
+   ['기록과 집계까지를 1차, 발급과 이체는 2차로 나눌 것을 권합니다.',1]]},
+ k4:{k:'정해야 시작 가능',t:'인플루언서 정산자료',m:'',b:[
+   '주민등록번호 · 통장사본을 시스템이 받는지',
+   ['받으면 <strong>3.3% 원천징수 처리와 암호화 저장</strong>까지 만들어야 합니다.',1]]},
+ k5:{k:'정해야 시작 가능',t:'어드민 로그인 방식',m:'',b:[
+   '회사 구글 계정으로 / 따로 계정 만들어서 / 초대받은 사람만',
+   '내부에 몇 명이 쓰는지, 권한을 몇 등급으로 나눌지']},
+
+ r1:{k:'리스크',t:'같은 사람인지 못 알아봄',m:'R1',b:[
+   '표시 이름이 제각각이고 계정 주소 표기도 통일되어 있지 않습니다.',
+   ['판별에 실패하면 <strong>협업 경험 명단 자체를 만들 수 없습니다.</strong>',1],
+   '대응 — 계정 주소 형식 통일 + 사람이 직접 합치는 화면을 1주차에 포함']},
+ r2:{k:'리스크',t:'개인정보 노출',m:'R2',b:[
+   '지금 검수시트에 실명 · 연락처 · 자택 주소가 그대로 적혀 있습니다.',
+   ['암호화와 열람 제한은 <strong>데이터 구조를 짤 때</strong> 넣어야 하고, 나중에는 붙이기 어렵습니다.',1]]},
+ r3:{k:'리스크',t:'30일 안에 정산까지',m:'R3',b:[
+   '할 일이 넘칠 수 있습니다.',
+   '대응 — 정산을 1차(기록 · 집계)와 2차(발급 · 이체)로 나누기']},
+ r4:{k:'리스크',t:'시트와 시스템이 어긋남',m:'R4',b:[
+   '두 곳을 동시에 고치면 어느 쪽이 맞는지 알 수 없게 됩니다.',
+   '대응 — 끊는 날짜를 정하고 그 뒤로 시트는 보기 전용으로 잠금']},
+ r5:{k:'리스크',t:'한 거래처 비중이 큼',m:'R5',b:[
+   '캠페인의 약 40%가 한 거래처입니다.',
+   '대응 — 브랜드별 차이는 설정으로 처리하고 데이터 구조는 범용으로 유지']},
+
+ n1:{k:'첫날',t:'알림톡 문구 심사 신청',m:'시간이 걸리는 일',b:[
+   '발신번호 등록 + 보낼 문구 사전 심사',
+   ['<strong>3–5 영업일</strong> 걸립니다 — 첫날 신청해야 3주차에 씁니다.',1],
+   '인플루언서는 알림톡, 브랜드는 이메일 위주']},
+ n2:{k:'첫날',t:'Supabase 환경 구성',m:'',b:['프로젝트 생성','연습용과 실제용 환경 분리']},
+ n3:{k:'첫날',t:'GitHub 조직 개설',m:'',b:['4인 자리 배정','작업 나누는 규칙 · 코드 검토 규칙 확정']},
+ n4:{k:'첫날',t:'개인정보 문안 준비',m:'',b:[
+   '개인정보 처리방침','수집 · 이용 동의문',
+   '인플루언서 페이지에서 화면으로 동의받는 방식으로 대체 가능']}
+};
+
+const HINT = {hint:true, b:['위 항목에 <strong>마우스를 올리면</strong> 상세가 나옵니다. <strong>클릭하면 고정</strong>됩니다.']};
+
+/* ── 렌더 ─────────────────────────────────────────────── */
+function html(d){
+  const rows = d.b.map(x => Array.isArray(x) ? `<p class="hl">${x[0]}</p>` : `<p>${x}</p>`).join('');
+  const one = d.b.length <= 3 ? ' one' : '';
+  return `<div class="det-l">
+      <div class="det-k">${d.k || ''}${d.pin ? '<span class="chip">고정</span>' : ''}</div>
+      ${d.t ? `<div class="det-t">${d.t}</div>` : ''}
+      ${d.m ? `<div class="det-m">${d.m}</div>` : ''}
+    </div><div class="det-r${one}">${rows}</div>`;
+}
+function fill(sl, d, color){
+  const det = sl.querySelector('.det'); if(!det) return;
+  det.style.setProperty('--dc', color || 'var(--line-3)');
+  det.classList.toggle('hint', !!d.hint);
+  det.innerHTML = html(d);
+}
+const COLOR = {src:'var(--c-src)',db:'var(--c-db)',be:'var(--c-be)',ui:'var(--c-ui)',warn:'var(--warn)'};
+
+/* ── 슬라이드 ─────────────────────────────────────────── */
+const slides = [...document.querySelectorAll('.sl')];
+const dots = document.getElementById('dots');
+const cnt = document.getElementById('cnt');
+const prog = document.getElementById('prog');
+const prevB = document.getElementById('prev'), nextB = document.getElementById('next');
+let cur = 0, pinned = null;
+
+slides.forEach((_, i) => {
+  const b = document.createElement('button');
+  b.setAttribute('aria-label', `${i+1}번 슬라이드`);
+  b.addEventListener('click', () => go(i));
+  dots.appendChild(b);
+});
+
+function resetDet(i){
+  const sl = slides[i];
+  if(!sl.querySelector('.det')) return;
+  fill(sl, HINT, null);
+}
+function go(i){
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  unpin(true);
+  slides.forEach((s, n) => s.classList.toggle('on', n === cur));
+  [...dots.children].forEach((d, n) => d.classList.toggle('on', n === cur));
+  cnt.textContent = `${cur+1} / ${slides.length}`;
+  prog.style.width = ((cur+1) / slides.length * 100) + '%';
+  prevB.disabled = cur === 0; nextB.disabled = cur === slides.length - 1;
+  resetDet(cur);
+}
+function unpin(silent){
+  pinned = null;
+  document.querySelectorAll('.it.pin').forEach(e => e.classList.remove('pin'));
+  slides.forEach(s => s.classList.remove('dim'));
+  if(!silent) resetDet(cur);
+}
+
+/* ── 항목 인터랙션 ───────────────────────────────────── */
+document.querySelectorAll('.it').forEach(it => {
+  const key = it.dataset.d, sl = it.closest('.sl');
+  const col = COLOR[it.dataset.c] || 'var(--accent)';
+  const preview = () => { if(!pinned && D[key]){ fill(sl, D[key], col); sl.classList.add('dim'); } };
+  it.addEventListener('mouseenter', preview);
+  it.addEventListener('focus', preview);
+  it.addEventListener('click', e => {
+    e.stopPropagation();
+    if(!D[key]) return;
+    if(pinned === key){ unpin(); return; }
+    document.querySelectorAll('.it.pin').forEach(x => x.classList.remove('pin'));
+    pinned = key; it.classList.add('pin'); sl.classList.add('dim');
+    fill(sl, {...D[key], pin:true}, col);
+  });
+});
+slides.forEach(sl => sl.addEventListener('mouseleave', () => {
+  if(!pinned){ sl.classList.remove('dim'); resetDet(cur); }
+}));
+
+/* ── 조작 ─────────────────────────────────────────────── */
+prevB.addEventListener('click', () => go(cur - 1));
+nextB.addEventListener('click', () => go(cur + 1));
+document.getElementById('fs').addEventListener('click', () => {
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(cur + 1); }
+  else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(cur - 1); }
+  else if(e.key === ' ' && !e.target.closest('.it,.btn,.dots')){ e.preventDefault(); go(cur + 1); }
+  else if(e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if(e.key === 'End'){ e.preventDefault(); go(slides.length - 1); }
+  else if(e.key === 'Escape' && pinned){ unpin(); }
+});
+document.getElementById('deck').addEventListener('click', e => {
+  if(!e.target.closest('.it') && pinned) unpin();
+});
+
+go(0);
+</script>

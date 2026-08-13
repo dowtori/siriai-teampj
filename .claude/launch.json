@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "prototype",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "prototype", "--", "--port", "3210"],
+      "port": 3210
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8793", "--bind", "127.0.0.1", "--directory", "docs"],
+      "port": 8793
+    }
+  ]
+}

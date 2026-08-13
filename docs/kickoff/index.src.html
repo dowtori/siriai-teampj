@@ -1,0 +1,1126 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SIRIAI 서비스 시스템 구축</title>
+<style>
+/*__FONTFACES__*/
+
+/* ─── tokens ─────────────────────────────────────────────── */
+:root{
+  --paper:#f4f2ed;
+  --card:#ffffff;
+  --card-2:#faf9f6;
+  --ink:#26221c;
+  --ink-2:rgba(38,34,28,.66);
+  --ink-3:rgba(38,34,28,.44);
+  --line:rgba(38,34,28,.14);
+  --line-2:rgba(38,34,28,.07);
+  --line-3:rgba(38,34,28,.28);
+  --accent:#4d4da7;
+  --accent-ink:#3d3d8c;
+  --accent-soft:rgba(77,77,167,.09);
+  --c-brand:#3f6b9e;
+  --c-brand-soft:rgba(63,107,158,.10);
+  --c-infl:#a75f42;
+  --c-infl-soft:rgba(167,95,66,.10);
+  --c-camp:#4d4da7;
+  --c-camp-soft:rgba(77,77,167,.10);
+  --warn:#9e3b30;
+  --warn-soft:rgba(158,59,48,.09);
+  --sub:#9a9184;
+  --shadow:0 1px 2px rgba(38,34,28,.04),0 8px 24px rgba(38,34,28,.05);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --kr:'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
+  --lt:'Inter Tight','Pretendard',Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#16140f;
+    --card:#1e1b15;
+    --card-2:#242119;
+    --ink:#f1ede4;
+    --ink-2:rgba(241,237,228,.63);
+    --ink-3:rgba(241,237,228,.41);
+    --line:rgba(241,237,228,.15);
+    --line-2:rgba(241,237,228,.08);
+    --line-3:rgba(241,237,228,.30);
+    --accent:#9c9cee;
+    --accent-ink:#b4b4f4;
+    --accent-soft:rgba(156,156,238,.13);
+    --c-brand:#85b0e0;
+    --c-brand-soft:rgba(133,176,224,.13);
+    --c-infl:#e09b78;
+    --c-infl-soft:rgba(224,155,120,.13);
+    --c-camp:#9c9cee;
+    --c-camp-soft:rgba(156,156,238,.13);
+    --warn:#e58a7c;
+    --warn-soft:rgba(229,138,124,.13);
+    --sub:#8d8477;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16140f;
+  --card:#1e1b15;
+  --card-2:#242119;
+  --ink:#f1ede4;
+  --ink-2:rgba(241,237,228,.63);
+  --ink-3:rgba(241,237,228,.41);
+  --line:rgba(241,237,228,.15);
+  --line-2:rgba(241,237,228,.08);
+  --line-3:rgba(241,237,228,.30);
+  --accent:#9c9cee;
+  --accent-ink:#b4b4f4;
+  --accent-soft:rgba(156,156,238,.13);
+  --c-brand:#85b0e0;
+  --c-brand-soft:rgba(133,176,224,.13);
+  --c-infl:#e09b78;
+  --c-infl-soft:rgba(224,155,120,.13);
+  --c-camp:#9c9cee;
+  --c-camp-soft:rgba(156,156,238,.13);
+  --warn:#e58a7c;
+  --warn-soft:rgba(229,138,124,.13);
+  --sub:#8d8477;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
+}
+
+/* ─── base ───────────────────────────────────────────────── */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--kr);font-size:15px;font-weight:400;
+  letter-spacing:-.008em;line-height:1.72;
+  word-break:keep-all;overflow-wrap:anywhere;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
+
+/* ─── typography ─────────────────────────────────────────── */
+.eyebrow{
+  font-family:var(--lt);font-size:10px;font-weight:500;
+  letter-spacing:.2em;line-height:1;color:var(--ink-3);
+  display:flex;align-items:center;gap:9px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+h1{
+  font-size:clamp(32px,4.6vw,56px);font-weight:700;
+  letter-spacing:-.038em;line-height:1.06;margin:0;text-wrap:balance;
+}
+h2{
+  font-size:clamp(23px,2.7vw,33px);font-weight:700;
+  letter-spacing:-.032em;line-height:1.14;margin:0;text-wrap:balance;
+}
+h3{
+  font-size:16.5px;font-weight:600;letter-spacing:-.022em;
+  line-height:1.35;margin:0;
+}
+h4{
+  font-family:var(--lt);font-size:10px;font-weight:500;
+  letter-spacing:.18em;line-height:1;color:var(--ink-3);margin:0;
+}
+p{margin:0;text-wrap:pretty}
+.lede{font-size:clamp(15.5px,1.5vw,18px);line-height:1.66;color:var(--ink-2);letter-spacing:-.014em;max-width:56ch}
+.note{font-size:13px;line-height:1.6;color:var(--ink-3);letter-spacing:-.004em}
+.num{font-family:var(--lt);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+strong{font-weight:600;color:var(--ink)}
+a{color:var(--accent-ink);text-decoration:none;border-bottom:1px solid var(--line-3)}
+a:hover{border-bottom-color:currentColor}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+
+/* ─── topbar ─────────────────────────────────────────────── */
+.top{
+  position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:saturate(150%) blur(14px);border-bottom:1px solid var(--line-2);
+}
+.top-in{display:flex;align-items:center;gap:20px;height:52px}
+.mark{
+  font-family:var(--lt);font-weight:600;font-size:13px;letter-spacing:.26em;
+  color:var(--ink);white-space:nowrap;
+}
+.top-doc{
+  font-size:12.5px;color:var(--ink-3);letter-spacing:-.01em;white-space:nowrap;
+  padding-left:20px;border-left:1px solid var(--line);
+}
+.top-nav{margin-left:auto;display:flex;gap:2px}
+.top-nav a{
+  font-family:var(--lt);font-size:11.5px;font-weight:500;letter-spacing:.02em;
+  color:var(--ink-3);border:0;padding:6px 10px;border-radius:6px;
+  transition:color .2s var(--ease),background .2s var(--ease);
+}
+.top-nav a:hover{color:var(--ink);background:var(--line-2)}
+@media(max-width:820px){.top-nav,.top-doc{display:none}}
+
+/* ─── hero ───────────────────────────────────────────────── */
+.hero{padding:clamp(56px,9vh,104px) 0 clamp(40px,6vh,64px)}
+.hero-grid{display:grid;gap:clamp(24px,3.4vw,44px)}
+.hero h1{margin-top:20px}
+.hero .lede{margin-top:22px}
+.facts{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:12px;overflow:hidden;margin-top:clamp(32px,4.5vw,48px);
+}
+.fact{background:var(--card);padding:20px 22px 22px;display:flex;flex-direction:column;gap:7px}
+.fact b{font-family:var(--lt);font-size:clamp(26px,3vw,34px);font-weight:600;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.fact span{font-size:12.5px;color:var(--ink-3);letter-spacing:-.005em;line-height:1.4}
+.fact i{font-family:var(--lt);font-style:normal;font-size:.55em;font-weight:500;letter-spacing:-.01em;color:var(--ink-3);margin-left:3px}
+
+/* ─── sections ───────────────────────────────────────────── */
+section{padding:clamp(52px,7.5vh,88px) 0;border-top:1px solid var(--line-2)}
+.sec-head{display:grid;gap:16px;margin-bottom:clamp(30px,4vw,44px);max-width:64ch}
+.sec-head .lede{margin-top:2px}
+
+/* ─── panel ──────────────────────────────────────────────── */
+.panel{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.panel-hd{
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  padding:16px 22px;border-bottom:1px solid var(--line-2);background:var(--card-2);
+}
+.panel-hd p{font-size:12.5px;color:var(--ink-3);letter-spacing:-.004em}
+.panel-bd{padding:clamp(20px,3vw,30px)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ─── diagram svg ────────────────────────────────────────── */
+.dia{display:block;width:100%;height:auto;min-width:660px}
+.dia .bx{fill:var(--card-2);stroke:var(--line);stroke-width:1}
+.dia .bx-a{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.25}
+.dia .bx-b{fill:var(--c-brand-soft);stroke:var(--c-brand);stroke-width:1.25}
+.dia .bx-i{fill:var(--c-infl-soft);stroke:var(--c-infl);stroke-width:1.25}
+.dia .bx-g{fill:none;stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.dia .ln{fill:none;stroke:var(--line-3);stroke-width:1.1}
+.dia .ln-a{fill:none;stroke:var(--accent);stroke-width:1.4}
+.dia .tt{fill:var(--ink);font-family:var(--kr);font-size:15px;font-weight:600;letter-spacing:-.025em}
+.dia .tm{fill:var(--ink-2);font-family:var(--kr);font-size:12.5px;font-weight:400;letter-spacing:-.01em}
+.dia .ts{fill:var(--ink-3);font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.16em}
+.dia .ta{fill:var(--accent-ink);font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.16em}
+.dia .tb{fill:var(--c-brand);font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.16em}
+.dia .ti{fill:var(--c-infl);font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.16em}
+
+/* ─── admin IA ───────────────────────────────────────────── */
+.ia{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+@media(max-width:900px){.ia{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.ia{grid-template-columns:1fr}}
+.ia-col{background:var(--card);padding:20px 20px 24px;display:flex;flex-direction:column;gap:14px}
+.ia-col.dim{background:var(--card-2)}
+.ia-t{display:flex;align-items:center;gap:9px;font-size:14.5px;font-weight:600;letter-spacing:-.022em}
+.ia-t .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.ia-col.dim .ia-t .dot{background:var(--sub)}
+.ia ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.ia li{
+  font-size:13px;color:var(--ink-2);letter-spacing:-.008em;line-height:1.45;
+  padding-left:13px;position:relative;
+}
+.ia li::before{
+  content:"";position:absolute;left:0;top:.62em;width:5px;height:1px;background:var(--line-3);
+}
+.ia-split{
+  grid-column:1/-1;background:var(--card);padding:11px 20px;
+  font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.18em;color:var(--ink-3);
+  display:flex;align-items:center;gap:10px;
+}
+.ia-split::after{content:"";flex:1;height:1px;background:var(--line-2)}
+
+/* ─── funnel ─────────────────────────────────────────────── */
+.fun{display:flex;flex-direction:column;gap:4px}
+.fun-r{display:grid;grid-template-columns:126px 1fr;gap:16px;align-items:center}
+.fun-k{
+  font-family:var(--lt);font-size:10px;font-weight:500;letter-spacing:.14em;
+  color:var(--ink-3);text-align:right;line-height:1.3;
+}
+.fun-b{
+  position:relative;height:48px;border-radius:6px;display:flex;align-items:center;
+  padding:0 16px;gap:13px;min-width:0;overflow:hidden;
+  background:var(--card-2);border:1px solid var(--line-2);
+}
+.fun-b::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w,100%);
+  background:var(--fill,var(--line-2));border-right:1.5px solid var(--edge,var(--line-3));
+}
+.fun-b > *{position:relative;z-index:1}
+.fun-b b{
+  font-family:var(--lt);font-size:15px;font-weight:600;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;flex:none;min-width:58px;
+}
+.fun-b .tx{font-size:12.5px;letter-spacing:-.01em;line-height:1.35;color:var(--ink-2);min-width:0}
+.fun-b .pc{
+  margin-left:auto;flex:none;font-family:var(--lt);font-size:11px;font-weight:500;
+  letter-spacing:.04em;color:var(--ink-3);font-variant-numeric:tabular-nums;
+}
+.fun-b.new{border-style:dashed;border-color:var(--edge)}
+.fun-b.new::before{background:none;border-right-style:dashed}
+.fun-b.new b{color:var(--edge)}
+.fun-note{
+  display:grid;grid-template-columns:132px 1fr;gap:16px;margin-top:14px;
+}
+.fun-note div:last-child{font-size:12.5px;color:var(--ink-3);line-height:1.6;letter-spacing:-.005em}
+
+/* ─── table ──────────────────────────────────────────────── */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line-2);letter-spacing:-.008em;vertical-align:baseline}
+th{
+  font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.16em;
+  color:var(--ink-3);border-bottom:1px solid var(--line);white-space:nowrap;padding-bottom:10px;
+}
+td.n,th.n{text-align:right;font-family:var(--lt);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.sum td{border-top:1px solid var(--line-3);border-bottom:0;font-weight:600;font-size:14.5px;padding-top:14px}
+tr.sum td.n{font-size:16px;letter-spacing:-.02em}
+td small{display:block;font-size:11.5px;color:var(--ink-3);letter-spacing:-.002em;line-height:1.45;margin-top:2px}
+.tag{
+  display:inline-block;font-family:var(--lt);font-size:9px;font-weight:500;letter-spacing:.14em;
+  padding:3px 7px;border-radius:4px;background:var(--accent-soft);color:var(--accent-ink);
+  vertical-align:1px;margin-left:7px;
+}
+
+/* ─── plan grid ──────────────────────────────────────────── */
+.plan{min-width:900px}
+.plan-h{display:grid;grid-template-columns:118px repeat(4,1fr);gap:1px;background:var(--line)}
+.plan-h > div{background:var(--card-2);padding:13px 15px}
+.plan-h .wk{display:flex;flex-direction:column;gap:4px}
+.plan-h .wk b{font-family:var(--lt);font-size:15px;font-weight:600;letter-spacing:-.01em}
+.plan-h .wk span{font-size:12px;color:var(--ink-3);letter-spacing:-.008em;line-height:1.35}
+.plan-b{display:grid;grid-template-columns:118px repeat(4,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.plan-b > div{background:var(--card);padding:14px 15px;min-height:96px}
+.trk{display:flex;flex-direction:column;gap:5px;background:var(--card-2)!important;justify-content:center}
+.trk b{font-size:13px;font-weight:600;letter-spacing:-.018em;line-height:1.3}
+.trk span{font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.16em;color:var(--ink-3)}
+.task{display:flex;flex-direction:column;gap:9px}
+.task div{
+  font-size:12.5px;line-height:1.45;letter-spacing:-.01em;color:var(--ink-2);
+  padding-left:11px;border-left:2px solid var(--line);
+}
+.task div.on{border-left-color:var(--accent);color:var(--ink)}
+.ms{
+  display:grid;grid-template-columns:118px repeat(4,1fr);gap:1px;background:var(--line);
+  border-top:1px solid var(--line);
+}
+.ms > div{background:var(--card);padding:13px 15px;display:flex;align-items:center;gap:9px;font-size:12.5px;letter-spacing:-.01em;line-height:1.4}
+.ms .trk{padding:13px 15px}
+.ms .flag{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+
+/* ─── decisions ──────────────────────────────────────────── */
+.dec{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.dec-c{background:var(--card);padding:22px 24px 26px;display:flex;flex-direction:column;gap:16px}
+.dec-c > .top-l{display:flex;align-items:center;gap:9px}
+.dec-c .pill{
+  font-family:var(--lt);font-size:9px;font-weight:500;letter-spacing:.16em;
+  padding:4px 8px;border-radius:4px;
+}
+.pill.block{background:var(--warn-soft);color:var(--warn)}
+.pill.soon{background:var(--accent-soft);color:var(--accent-ink)}
+.pill.go{background:var(--line-2);color:var(--ink-3)}
+.dec ol,.dec ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px;counter-reset:d}
+.dec li{font-size:13px;line-height:1.55;letter-spacing:-.01em;color:var(--ink-2);padding-left:22px;position:relative}
+.dec ol li::before{
+  counter-increment:d;content:counter(d,decimal-leading-zero);
+  position:absolute;left:0;top:.06em;font-family:var(--lt);font-size:10px;font-weight:500;
+  letter-spacing:.06em;color:var(--ink-3);
+}
+.dec ul li::before{content:"";position:absolute;left:4px;top:.66em;width:6px;height:1px;background:var(--line-3)}
+.dec li b{color:var(--ink);font-weight:600}
+
+/* ─── risk ───────────────────────────────────────────────── */
+.risk{display:flex;flex-direction:column;gap:1px;background:var(--line)}
+.risk-r{background:var(--card);padding:16px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:baseline}
+.risk-k{font-family:var(--lt);font-size:10px;font-weight:500;letter-spacing:.14em;color:var(--warn);padding-top:2px}
+.risk-r b{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.018em;margin-bottom:3px}
+.risk-r p{font-size:12.5px;color:var(--ink-3);line-height:1.55;letter-spacing:-.005em}
+
+/* ─── footer ─────────────────────────────────────────────── */
+footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
+.foot{display:flex;justify-content:space-between;align-items:baseline;gap:24px;flex-wrap:wrap}
+.foot span{font-family:var(--lt);font-size:10px;font-weight:500;letter-spacing:.18em;color:var(--ink-3)}
+
+@media(max-width:640px){
+  .fun-r,.fun-note{grid-template-columns:1fr;gap:6px}
+  .fun-k{text-align:left}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+
+<header class="top">
+  <div class="wrap top-in">
+    <span class="mark">SIRIAI</span>
+    <span class="top-doc">서비스 시스템 구축</span>
+    <nav class="top-nav">
+      <a href="#structure">구조</a>
+      <a href="#domain">핵심 데이터</a>
+      <a href="#ia">어드민</a>
+      <a href="#data">데이터</a>
+      <a href="#cost">비용</a>
+      <a href="#plan">일정</a>
+      <a href="#decide">결정</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ══ HERO ══ -->
+<div class="wrap hero">
+  <div class="hero-grid">
+    <div>
+      <p class="eyebrow">PROJECT KICKOFF · 2026.08</p>
+      <h1>SIRIAI 서비스 시스템 구축</h1>
+      <p class="lede">자산 통합 및 운영 시스템을 구축합니다.</p>
+    </div>
+  </div>
+  <div class="facts">
+    <div class="fact"><b>30<i>일</i></b><span>착수부터 실제 운영 전환까지</span></div>
+    <div class="fact"><b>4<i>인</i></b><span>Claude Max 3 · Pro 1</span></div>
+    <div class="fact"><b>3<i>개</i></b><span>구축 화면</span></div>
+    <div class="fact"><b>20,347</b><span>옮겨올 인플루언서 명단</span></div>
+    <div class="fact"><b>66<i>건</i></b><span>옮겨올 캠페인 (26년 2–8월)</span></div>
+  </div>
+</div>
+
+<!-- ══ STRUCTURE ══ -->
+<section id="structure">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">SYSTEM STRUCTURE</p>
+      <h2>시스템 구조</h2>
+      <p class="lede">
+        하나의 데이터베이스를 어드민 · 브랜드 · 인플루언서 세 화면이 공유합니다.
+        권한은 데이터베이스 계층에서 처리합니다.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>시스템 레이어</h3>
+        <p>화면 · 서버 · 데이터 · 외부 연동</p>
+      </div>
+      <div class="panel-bd scroll">
+        <svg class="dia" viewBox="0 0 1080 520" role="img" aria-label="시스템 구조도: 어드민·브랜드·인플루언서 세 화면이 서버를 거쳐 데이터베이스로 연결되고, 하단에 외부 연동이 붙는다">
+
+          <!-- surfaces -->
+          <rect class="bx-a" x="30" y="24" width="300" height="96" rx="9"/>
+          <text class="ta" x="52" y="52">ADMIN · INTERNAL</text>
+          <text class="tt" x="52" y="79">어드민</text>
+          <text class="tm" x="52" y="101">전체 운영 · 세일즈 · 정산 · 설정</text>
+
+          <rect class="bx-b" x="390" y="24" width="300" height="96" rx="9"/>
+          <text class="tb" x="412" y="52">BRAND · CLIENT</text>
+          <text class="tt" x="412" y="79">브랜드</text>
+          <text class="tm" x="412" y="101">캠페인 현황 · 리포트 · 광고 랜딩</text>
+
+          <rect class="bx-i" x="750" y="24" width="300" height="96" rx="9"/>
+          <text class="ti" x="772" y="52">CREATOR</text>
+          <text class="tt" x="772" y="79">인플루언서</text>
+          <text class="tm" x="772" y="101">내 캠페인 · 지원 · 정산자료 제출</text>
+
+          <!-- surface → bus -->
+          <path class="ln" d="M180 120 V152 M540 120 V152 M900 120 V152"/>
+          <path class="ln" d="M180 152 H900"/>
+          <path class="ln-a" d="M540 152 V196"/>
+
+          <!-- api band -->
+          <rect class="bx" x="30" y="196" width="1020" height="80" rx="9"/>
+          <text class="ts" x="52" y="224">DOMAIN · API · AUTHZ</text>
+          <text class="tt" x="52" y="252">서버 · 업무 처리 · 권한 관리</text>
+          <text class="tm" x="700" y="252">역할에 따라 개인정보 가리기 · 조회 기록 남기기</text>
+
+          <path class="ln-a" d="M540 276 V312"/>
+
+          <!-- db band -->
+          <rect class="bx-a" x="30" y="312" width="1020" height="104" rx="9"/>
+          <text class="ta" x="52" y="340">POSTGRESQL</text>
+          <text class="tt" x="52" y="368">브랜드 · 캠페인 · 인플루언서 · 캠페인 참여 · 정산</text>
+          <text class="tm" x="52" y="394">개인정보는 컬럼 단위로 암호화합니다.</text>
+
+          <path class="ln" d="M180 416 V444 M540 416 V444 M900 416 V444"/>
+
+          <!-- external -->
+          <rect class="bx" x="30" y="444" width="234" height="52" rx="7"/>
+          <text class="tm" x="52" y="475">알림톡 · SMS · 이메일</text>
+
+          <rect class="bx" x="292" y="444" width="234" height="52" rx="7"/>
+          <text class="tm" x="314" y="475">파일 스토리지</text>
+
+          <rect class="bx" x="554" y="444" width="234" height="52" rx="7"/>
+          <text class="tm" x="576" y="475">NoxInfluencer raw</text>
+
+          <rect class="bx" x="816" y="444" width="234" height="52" rx="7"/>
+          <text class="tm" x="838" y="475">세금계산서 · 회계</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px">
+      <div class="panel-hd">
+        <h3>옮겨올 데이터</h3>
+        <p>현재 운영 중인 도구</p>
+      </div>
+      <div class="panel-bd scroll">
+        <svg class="dia" viewBox="0 0 1080 232" role="img" aria-label="현재 운영 도구 6종이 새 시스템으로 옮겨지는 흐름">
+          <rect class="bx-g" x="20" y="16" width="620" height="200" rx="10"/>
+          <text class="ts" x="42" y="46">CURRENT</text>
+
+          <rect class="bx" x="42" y="62" width="184" height="60" rx="7"/>
+          <text class="tm" x="60" y="88">마스터시트</text>
+          <text class="tm" x="60" y="108" style="font-size:11px;fill:var(--ink-3)">프로젝트관리 · 34컬럼</text>
+
+          <rect class="bx" x="240" y="62" width="184" height="60" rx="7"/>
+          <text class="tm" x="258" y="88">캠페인 진행시트</text>
+          <text class="tm" x="258" y="108" style="font-size:11px;fill:var(--ink-3)">선정 · 배송 · 콘텐츠</text>
+
+          <rect class="bx" x="438" y="62" width="184" height="60" rx="7"/>
+          <text class="tm" x="456" y="88">콘텐츠 검수시트</text>
+          <text class="tm" x="456" y="108" style="font-size:11px;fill:var(--ink-3)">3단계 체크리스트</text>
+
+          <rect class="bx" x="42" y="134" width="184" height="60" rx="7"/>
+          <text class="tm" x="60" y="160">가이드 · 지원 페이지</text>
+          <text class="tm" x="60" y="180" style="font-size:11px;fill:var(--ink-3)">캠페인별 자체 웹페이지</text>
+
+          <rect class="bx" x="240" y="134" width="184" height="60" rx="7"/>
+          <text class="tm" x="258" y="160">슬랙 · 드라이브</text>
+          <text class="tm" x="258" y="180" style="font-size:11px;fill:var(--ink-3)">정산자료 · 콘텐츠 보관</text>
+
+          <rect class="bx" x="438" y="134" width="184" height="60" rx="7"/>
+          <text class="tm" x="456" y="160">NoxInfluencer</text>
+          <text class="tm" x="456" y="180" style="font-size:11px;fill:var(--ink-3)">소싱 · 20,347건</text>
+
+          <path class="ln-a" d="M652 116 H726" marker-end="url(#ah)"/>
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/>
+            </marker>
+          </defs>
+          <text class="ta" x="656" y="106">MIGRATE</text>
+
+          <rect class="bx-a" x="740" y="16" width="320" height="200" rx="10"/>
+          <text class="ta" x="762" y="46">TARGET</text>
+          <text class="tt" x="762" y="88">SIRIAI 서비스 시스템</text>
+          <text class="tm" x="762" y="118">어드민 · 브랜드 · 인플루언서</text>
+          <text class="tm" x="762" y="150" style="font-size:11.5px;fill:var(--ink-3)">시트는 전환일 이후 보기 전용으로 남깁니다.</text>
+          <text class="tm" x="762" y="170" style="font-size:11.5px;fill:var(--ink-3)">양방향 동기화는 하지 않습니다.</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ DOMAIN ══ -->
+<section id="domain">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">CORE DATA</p>
+      <h2>필요한 핵심 데이터 구분</h2>
+      <p class="lede">
+        브랜드 · 캠페인 · 인플루언서와, 그 사이를 잇는 <strong>캠페인 참여</strong>로 구성합니다.
+        진행시트 한 줄이 캠페인 참여 한 건에 해당합니다.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>핵심 데이터 관계</h3>
+        <p>캠페인 참여 = 선정 · 배송 · 업로드 · 검수 · 정산을 한 건으로 묶은 단위</p>
+      </div>
+      <div class="panel-bd scroll">
+        <svg class="dia" viewBox="0 0 1080 400" role="img" aria-label="핵심 데이터 관계: 브랜드에서 캠페인, 캠페인 참여, 인플루언서로 이어지는 관계와 각각의 하위 데이터">
+
+          <!-- nodes -->
+          <rect class="bx-b" x="20" y="30" width="196" height="80" rx="9"/>
+          <text class="tb" x="40" y="58">BRAND</text>
+          <text class="tt" x="40" y="86">브랜드 · 거래처</text>
+
+          <rect class="bx-a" x="288" y="30" width="196" height="80" rx="9"/>
+          <text class="ta" x="308" y="58">CAMPAIGN</text>
+          <text class="tt" x="308" y="86">캠페인</text>
+
+          <rect class="bx-a" x="556" y="20" width="220" height="100" rx="9" style="stroke-width:2"/>
+          <text class="ta" x="578" y="50">PARTICIPATION</text>
+          <text class="tt" x="578" y="78">캠페인 참여</text>
+          <text class="tm" x="578" y="101" style="font-size:11.5px">진행시트 한 줄 = 한 행</text>
+
+          <rect class="bx-i" x="848" y="30" width="196" height="80" rx="9"/>
+          <text class="ti" x="868" y="58">CREATOR</text>
+          <text class="tt" x="868" y="86">인플루언서</text>
+
+          <!-- edges -->
+          <path class="ln" d="M216 70 H288" marker-end="url(#ah2)"/>
+          <path class="ln" d="M484 70 H556" marker-end="url(#ah2)"/>
+          <path class="ln" d="M848 70 H776" marker-end="url(#ah2)"/>
+          <defs>
+            <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" fill="var(--line-3)"/>
+            </marker>
+          </defs>
+          <text class="ts" x="228" y="62">1 : N</text>
+          <text class="ts" x="496" y="62">1 : N</text>
+          <text class="ts" x="794" y="62">N : 1</text>
+
+          <!-- drops -->
+          <path class="ln" d="M118 110 V150 M386 110 V150 M666 120 V150 M946 110 V150"/>
+
+          <!-- satellites -->
+          <rect class="bx" x="20" y="150" width="196" height="44" rx="6"/>
+          <text class="tm" x="40" y="177">담당자 · 접근 코드</text>
+          <rect class="bx" x="20" y="202" width="196" height="44" rx="6"/>
+          <text class="tm" x="40" y="229">계약 · 단가 정책</text>
+
+          <rect class="bx" x="288" y="150" width="196" height="44" rx="6"/>
+          <text class="tm" x="308" y="177">일정 · 상태 · 산출물</text>
+          <rect class="bx" x="288" y="202" width="196" height="44" rx="6"/>
+          <text class="tm" x="308" y="229">재무 · 계산서 · 입금</text>
+
+          <rect class="bx" x="556" y="150" width="220" height="44" rx="6"/>
+          <text class="tm" x="578" y="177">선정 · 제안비용 · 응답</text>
+          <rect class="bx" x="556" y="202" width="220" height="44" rx="6"/>
+          <text class="tm" x="578" y="229">배송 · 송장 · 출고</text>
+          <rect class="bx" x="556" y="254" width="220" height="44" rx="6"/>
+          <text class="tm" x="578" y="281">콘텐츠 · 검수 체크리스트</text>
+          <rect class="bx" x="556" y="306" width="220" height="44" rx="6"/>
+          <text class="tm" x="578" y="333">고료 · 정산자료</text>
+
+          <rect class="bx" x="848" y="150" width="196" height="44" rx="6"/>
+          <text class="tm" x="868" y="177">계정 (IG · YT · TT)</text>
+          <rect class="bx" x="848" y="202" width="196" height="44" rx="6"/>
+          <text class="tm" x="868" y="229">시점별 지표 기록</text>
+          <rect class="bx" x="848" y="254" width="196" height="44" rx="6"/>
+          <text class="tm" x="868" y="281">분류 태그</text>
+          <rect class="bx-i" x="848" y="306" width="196" height="44" rx="6"/>
+          <text class="tm" x="868" y="333" style="fill:var(--c-infl)">개인정보 · 암호화</text>
+
+          <path class="ln" d="M118 194 V202 M386 194 V202 M666 194 V202 M666 246 V254 M666 298 V306 M946 194 V202 M946 246 V254 M946 298 V306"/>
+
+          <text class="tm" x="20" y="382" style="font-size:11.5px;fill:var(--ink-3)">사람과 계정은 분리해서 저장합니다. 한 사람이 인스타 · 유튜브 · 틱톡을 동시에 가질 수 있습니다.</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ADMIN IA ══ -->
+<section id="ia">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">ADMIN STRUCTURE</p>
+      <h2>어드민 구조</h2>
+      <p class="lede">
+        매일 쓰는 영역과 주기적으로 쓰는 영역을 내비게이션에서 분리합니다.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="ia">
+        <div class="ia-col">
+          <div class="ia-t"><span class="dot"></span>홈</div>
+          <ul>
+            <li>오늘 할 일</li>
+            <li>마감 임박 캠페인</li>
+            <li>알림 · 승인 대기</li>
+          </ul>
+        </div>
+        <div class="ia-col">
+          <div class="ia-t"><span class="dot"></span>대시보드</div>
+          <ul>
+            <li>매출 · 순이익 · 마진율</li>
+            <li>업로드율 · 컨펌율</li>
+            <li>미수금 · 입금 현황</li>
+            <li>거래처별 · 월별 추이</li>
+          </ul>
+        </div>
+        <div class="ia-col">
+          <div class="ia-t"><span class="dot"></span>세일즈</div>
+          <ul>
+            <li>거래처 · 담당자</li>
+            <li>제안 · 견적</li>
+            <li>브랜드 페이지 발급</li>
+            <li>랜딩 · 리드</li>
+          </ul>
+        </div>
+        <div class="ia-col">
+          <div class="ia-t"><span class="dot"></span>캠페인</div>
+          <ul>
+            <li>캠페인 목록 · 보드</li>
+            <li>모집 · 선정</li>
+            <li>배송 · 콘텐츠</li>
+            <li>검수 체크리스트</li>
+            <li>인플루언서 명단</li>
+          </ul>
+        </div>
+
+        <div class="ia-split">하단 분리 영역</div>
+
+        <div class="ia-col dim">
+          <div class="ia-t"><span class="dot"></span>정산</div>
+          <ul>
+            <li>매출 — 계산서 발급일 기준</li>
+            <li>월간 · 연간 집계</li>
+            <li>인플루언서 정산</li>
+            <li>정산자료 · 원천징수</li>
+          </ul>
+        </div>
+        <div class="ia-col dim">
+          <div class="ia-t"><span class="dot"></span>관리 · 설정</div>
+          <ul>
+            <li>구성원 · 권한</li>
+            <li>알림 템플릿</li>
+            <li>접근 코드</li>
+            <li>조회 기록</li>
+          </ul>
+        </div>
+        <div class="ia-col dim" style="justify-content:center">
+          <p class="note">브랜드 · 인플루언서 화면은 따로 분리되며, 어드민에서 발급한 개인 코드로 들어옵니다.</p>
+        </div>
+        <div class="ia-col dim" style="justify-content:center">
+          <p class="note">기존 <strong>siriai-sales</strong>의 코드 게이트 구조를 그대로 확장합니다. 정적 레지스트리만 DB 조회로 교체하면 됩니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ DATA ══ -->
+<section id="data">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">INFLUENCER DB</p>
+      <h2>인플루언서 DB 관리</h2>
+      <p class="lede">
+        원본 20,347건을 연락 가능 여부와 협업 경험 기준으로 다섯 단계로 나눕니다.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>다섯 단계 구분</h3>
+        <p>실측 기준 · 2026.08.12</p>
+      </div>
+      <div class="panel-bd">
+        <div class="fun">
+          <div class="fun-r">
+            <div class="fun-k">L0 · RAW</div>
+            <div class="fun-b" style="--w:100%;--fill:var(--line-2);--edge:var(--line-3)">
+              <b>20,347</b>
+              <span class="tx">원본 전체 — 유튜브 867 · 인스타 16,268 · 틱톡 3,212</span>
+              <span class="pc">100%</span>
+            </div>
+          </div>
+          <div class="fun-r">
+            <div class="fun-k">L1 · CONTACTABLE</div>
+            <div class="fun-b" style="--w:47%;--fill:var(--c-brand-soft);--edge:var(--c-brand)">
+              <b>9,532</b>
+              <span class="tx">이메일 확보 — <strong>연락 가능 명단</strong></span>
+              <span class="pc">47%</span>
+            </div>
+          </div>
+          <div class="fun-r">
+            <div class="fun-k">L2 · CONTACTED</div>
+            <div class="fun-b" style="--w:29%;--fill:var(--c-brand-soft);--edge:var(--c-brand)">
+              <b>5,929</b>
+              <span class="tx">발송 · 응답 이력 있음</span>
+              <span class="pc">29%</span>
+            </div>
+          </div>
+          <div class="fun-r">
+            <div class="fun-k">L3 · COLLABORATED</div>
+            <div class="fun-b new" style="--w:14%;--edge:var(--c-infl)">
+              <b>구축</b>
+              <span class="tx"><strong>협업 경험 명단</strong> — 진행시트를 되짚어 생성</span>
+              <span class="pc">규모 미확정</span>
+            </div>
+          </div>
+          <div class="fun-r">
+            <div class="fun-k">L4 · VERIFIED</div>
+            <div class="fun-b new" style="--w:8%;--edge:var(--c-infl)">
+              <b>구축</b>
+              <span class="tx"><strong>바로 섭외 가능 명단</strong> — 실명 · 연락처 · 정산정보 확보</span>
+              <span class="pc">규모 미확정</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fun-note">
+          <div class="fun-k" style="color:var(--warn)">CRITICAL</div>
+          <div>
+            원본의 <strong>협업 여부 항목은 전 건이 같은 값</strong>입니다 — 즉 쓰이지 않았습니다.
+            4 · 5단계는 원본에 없으며, 진행시트와 검수시트를 되짚어 새로 만들어야 합니다.
+            같은 사람인지 판별할 기준은 <strong>형식을 통일한 계정 주소</strong>뿐입니다. 표시 이름은 이모지가 섞이고 자주 바뀝니다.
+            점선 막대의 너비는 참고용이며, 실제 규모는 데이터를 옮긴 뒤 확정됩니다.
+          </div>
+        </div>
+        <div class="fun-note" style="margin-top:10px">
+          <div class="fun-k">별도 축</div>
+          <div>
+            답장을 잘 하는 정도가 기록된 <strong class="num">10,356</strong>건은 단계가 아니라
+            각 사람에게 붙는 <strong>점수</strong>입니다. 같은 단계 안에서 순서를 정할 때 씁니다.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px">
+      <div class="panel-hd">
+        <h3>분류 기준 정리</h3>
+        <p>폴더 컬럼 40종 — 다섯 개 축으로 분해</p>
+      </div>
+      <div class="panel-bd scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>현재 폴더값 (원문)</th>
+              <th>브랜드</th>
+              <th>카테고리</th>
+              <th>티어</th>
+              <th>용도</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>4월 뷰티 메일용 (무신사) (사용완료)<small>인스타 · 667건</small></td>
+              <td>무신사</td><td>뷰티</td><td>—</td><td>메일 발송</td><td>소진</td>
+            </tr>
+            <tr>
+              <td>오드타입 인플루언서_뷰티/릴스 (4476 ~ 9550)<small>인스타 · 1,000건</small></td>
+              <td>오드타입</td><td>뷰티 · 릴스</td><td>4.5K–9.5K</td><td>모집</td><td>활성</td>
+            </tr>
+            <tr>
+              <td>일본 틱톡 댄스(적합도 있음 유사군)<small>틱톡 · 247건</small></td>
+              <td>—</td><td>댄스</td><td>—</td><td>챌린지</td><td>적합 · 유사군</td>
+            </tr>
+            <tr>
+              <td>한국거주 일본 유튜버(크레딧 소진 완료)<small>유튜브 · 342건</small></td>
+              <td>—</td><td>일본 · 국내거주</td><td>—</td><td>소싱</td><td>소진</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note" style="margin-top:16px">
+          브랜드 · 카테고리 · 팔로워 구간 · 용도 · 소진 여부가 한 문자열에 섞여 있습니다.
+          축으로 분해하면 &ldquo;무신사 뷰티 · 1만 이하 · 미소진&rdquo; 같은 조합 검색이 가능해집니다.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ COST ══ -->
+<section id="cost">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">COST</p>
+      <h2>팀 플랜 운용 비용</h2>
+      <p class="lede">
+        30일 프로젝트이므로 <strong>월 결제 기준</strong>으로 산정했습니다.
+        연간 약정은 단가가 내려가지만 12개월 묶이므로 이 기간에는 권하지 않습니다.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>구축 기간 (30일)</h3>
+        <p>월 결제 · 정가 기준</p>
+      </div>
+      <div class="panel-bd scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>구성</th>
+              <th class="n">단가 / 월</th>
+              <th class="n">수량</th>
+              <th class="n">월 합계</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Claude Team<span class="tag">PREMIUM</span></td>
+              <td>Max 급 사용량 <small>개발 주력 3인</small></td>
+              <td class="n">$125</td><td class="n">3</td><td class="n">$375</td>
+            </tr>
+            <tr>
+              <td>Claude Team<span class="tag" style="background:var(--line-2);color:var(--ink-3)">STANDARD</span></td>
+              <td>Pro 급 사용량 <small>기획 · 리뷰 1인</small></td>
+              <td class="n">$25</td><td class="n">1</td><td class="n">$25</td>
+            </tr>
+            <tr>
+              <td>GitHub Team</td>
+              <td>저장소 · Actions · 코드 리뷰</td>
+              <td class="n">$4</td><td class="n">4</td><td class="n">$16</td>
+            </tr>
+            <tr>
+              <td>Vercel Pro</td>
+              <td>배포 · 프리뷰 <small>시트당 $20 사용량 크레딧 포함</small></td>
+              <td class="n">$20</td><td class="n">4</td><td class="n">$80</td>
+            </tr>
+            <tr>
+              <td>Supabase Pro</td>
+              <td>DB · 인증 · 스토리지 <small>조직 단위 과금</small></td>
+              <td class="n">$25</td><td class="n">1</td><td class="n">$25</td>
+            </tr>
+            <tr class="sum">
+              <td colspan="4">구축 기간 월 합계</td>
+              <td class="n">$521</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note" style="margin-top:16px">
+          원화 환산 약 <strong class="num">₩729,000</strong> — 환율 ₩1,400/$ 가정.
+          실제 청구 시점 환율과 부가세는 별도입니다. 도메인 · 발신번호 등록 등 일회성 비용은 제외했습니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px">
+      <div class="panel-hd">
+        <h3>릴리스 이후 · 최소 운영 구성</h3>
+        <p>참고 — 개발 시트를 축소했을 때</p>
+      </div>
+      <div class="panel-bd scroll">
+        <table>
+          <thead>
+            <tr><th>항목</th><th>구성</th><th class="n">월 합계</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Claude Team</td><td>Premium 1 · Standard 1</td><td class="n">$150</td></tr>
+            <tr><td>GitHub Team</td><td>4 시트 유지</td><td class="n">$16</td></tr>
+            <tr><td>Vercel Pro</td><td>2 시트</td><td class="n">$40</td></tr>
+            <tr><td>Supabase Pro</td><td>조직 1</td><td class="n">$25</td></tr>
+            <tr>
+              <td>알림톡 · SMS</td>
+              <td>변동비 <small>캠페인 20건 · 인당 4회 발송 가정</small></td>
+              <td class="n">≈ ₩25,000</td>
+            </tr>
+            <tr class="sum">
+              <td colspan="2">운영 월 합계</td>
+              <td class="n">$231 + 변동비</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note" style="margin-top:16px">
+          원화 환산 약 <strong class="num">₩348,000</strong>.
+          Claude 시트는 개발 종료 후 조정 가능합니다. 릴리스 후 유지 비용의 기준선입니다.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PLAN ══ -->
+<section id="plan">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">SCHEDULE · 30 DAYS</p>
+      <h2>프로젝트 진행 타임라인</h2>
+      <p class="lede">
+        30일 · 4인이 4개 파트로 나눠 동시에 진행합니다.
+        화면은 데이터가 있어야 만들 수 있어서 1주차에 데이터부터 세웁니다.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>주차별 담당 파트</h3>
+        <p>진한 항목이 그 주의 핵심 작업</p>
+      </div>
+      <div class="scroll">
+        <div class="plan">
+          <div class="plan-h">
+            <div></div>
+            <div class="wk"><b>Week 1</b><span>데이터 기반</span></div>
+            <div class="wk"><b>Week 2</b><span>운영 옮기기</span></div>
+            <div class="wk"><b>Week 3</b><span>외부 화면</span></div>
+            <div class="wk"><b>Week 4</b><span>정산 · 마감</span></div>
+          </div>
+          <div class="plan-b">
+            <div class="trk"><span>PART A</span><b>서버</b></div>
+            <div class="task">
+              <div class="on">데이터 구조 확정</div>
+              <div>권한 설계</div>
+            </div>
+            <div class="task">
+              <div class="on">캠페인 처리 로직</div>
+              <div>검수 단계 넘기기</div>
+            </div>
+            <div class="task">
+              <div>브랜드 · 인플루언서용 조회 기능</div>
+              <div>개인 코드 발급</div>
+            </div>
+            <div class="task">
+              <div class="on">정산 집계<br>계산서 발급일 기준</div>
+            </div>
+
+            <div class="trk"><span>PART B</span><b>데이터 옮기기</b></div>
+            <div class="task">
+              <div class="on">시트를 데이터베이스로 옮기기</div>
+              <div class="on">계정 주소 형식 통일 · 연결</div>
+              <div>노스 원본 정리</div>
+            </div>
+            <div class="task">
+              <div class="on">인플루언서 5단계 명단</div>
+              <div>못 찾은 건 직접 합치는 화면</div>
+            </div>
+            <div class="task">
+              <div>분류 기준 정리</div>
+              <div>접근 로그</div>
+            </div>
+            <div class="task">
+              <div>인플루언서 정산</div>
+              <div>정산자료 업로드 · 암호화</div>
+            </div>
+
+            <div class="trk"><span>PART C</span><b>화면</b></div>
+            <div class="task">
+              <div>디자인 기준 정리</div>
+              <div>어드민 뼈대 · 화면 이동</div>
+            </div>
+            <div class="task">
+              <div class="on">대시보드</div>
+              <div class="on">캠페인 목록 · 상세</div>
+              <div>검수 체크리스트</div>
+            </div>
+            <div class="task">
+              <div class="on">브랜드 페이지</div>
+              <div class="on">인플루언서 페이지</div>
+              <div>광고 랜딩 변형</div>
+            </div>
+            <div class="task">
+              <div>정산 화면</div>
+              <div>관리 · 설정 화면</div>
+            </div>
+
+            <div class="trk"><span>PART D</span><b>인프라 · 품질</b></div>
+            <div class="task">
+              <div class="on">개발 환경 구성</div>
+              <div class="on">알림톡 문구 심사 신청</div>
+              <div>자동 배포 · 작업 분리 규칙</div>
+            </div>
+            <div class="task">
+              <div>역할 · 권한</div>
+              <div>조회 기록</div>
+            </div>
+            <div class="task">
+              <div class="on">알림 발송 연결</div>
+              <div>이메일 대체 발송</div>
+            </div>
+            <div class="task">
+              <div class="on">최종 점검 · 속도</div>
+              <div class="on">실제 운영 전환</div>
+              <div>인수인계 문서</div>
+            </div>
+          </div>
+          <div class="ms">
+            <div class="trk"><span>GOAL</span><b>주차 목표</b></div>
+            <div><span class="flag"></span>데이터 구조 확정 · 1차 옮기기 완료</div>
+            <div><span class="flag"></span>어드민 내부 시험판</div>
+            <div><span class="flag"></span>세 화면 연결 완료</div>
+            <div><span class="flag"></span>실제 운영 시작</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:18px;max-width:70ch">
+      알림톡 문구 심사는 개발과 별개로 <strong>3–5 영업일</strong>이 걸립니다.
+      3주차에 붙이려면 1주차 첫날에 신청해야 합니다.
+    </p>
+  </div>
+</section>
+
+<!-- ══ DECIDE ══ -->
+<section id="decide">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">DECISIONS</p>
+      <h2>착수 전 결정</h2>
+      <p class="lede">결정 내용에 따라 구현이 달라지는 항목입니다.</p>
+    </div>
+
+    <div class="dec">
+      <div class="dec-c">
+        <div class="top-l"><span class="pill block">BLOCKING</span></div>
+        <ol>
+          <li><b>캠페인 진행 단계 정의</b> — 시트에는 종료 · 상시 두 가지만 실제로 쓰이고 있습니다. 중간 단계를 어떻게 나눌지가 캠페인 보드의 칸이 됩니다.</li>
+          <li><b>시트 전환 방식</b> — 완전히 옮기기 / 시트는 보기 전용으로 남기기 / 양쪽 계속 맞추기. 양쪽을 계속 맞추는 건 30일 안에 불가능합니다.</li>
+          <li><b>정산 범위</b> — 계산서 발급까지 시스템이 하는지, 발급일과 금액만 기록하는지.</li>
+          <li><b>인플루언서 정산자료</b> — 주민등록번호 · 통장사본을 시스템이 받는지. 받으면 원천징수 로직과 암호화 저장이 범위에 들어옵니다.</li>
+          <li><b>어드민 로그인 방식</b> — 회사 구글 계정 / 따로 만든 계정 / 초대받은 사람만. 내부 인원 수와 권한 등급.</li>
+        </ol>
+      </div>
+
+      <div class="dec-c">
+        <div class="top-l"><span class="pill soon">DESIGN IMPACT</span></div>
+        <ul>
+          <li><b>브랜드 페이지 공개 수준</b> — 광고 랜딩 겸용이면 코드 게이트를 어떻게 우회시킬지.</li>
+          <li><b>일본어 지원</b> — 인플루언서 풀의 38%가 일본입니다. 틱톡 풀은 사실상 일본 전용입니다.</li>
+          <li><b>원본 갱신 방식</b> — 수동 재업로드인지 연동인지, 주기는 어떻게 되는지.</li>
+          <li><b>기존 siriai-sales와의 관계</b> — 흡수 통합 / 별도 유지 / 리다이렉트.</li>
+          <li><b>주소 구조</b> — 주소를 나눌지(admin.siriai…) 경로로 구분할지(siriai…/admin).</li>
+        </ul>
+      </div>
+
+      <div class="dec-c">
+        <div class="top-l"><span class="pill go">DAY 1 ACTION</span></div>
+        <ul>
+          <li>알림톡 발신번호 등록 · 문구 심사 신청 <b>— 3–5 영업일 소요</b></li>
+          <li>Supabase 프로젝트 생성 · 연습용 / 실제용 환경 분리</li>
+          <li>GitHub 조직 개설 · 4인 자리 · 작업 분리 규칙 확정</li>
+          <li>개인정보 처리방침 · 수집 이용 동의문 문안 준비</li>
+          <li>Claude Team 시트 배정 <b>— Premium 3 · Standard 1</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px">
+      <div class="panel-hd">
+        <h3>리스크</h3>
+        <p>착수 전 확인된 항목</p>
+      </div>
+      <div class="risk">
+        <div class="risk-r">
+          <div class="risk-k">R1</div>
+          <div>
+            <b>같은 사람인지 못 알아봄</b>
+            <p>표시 이름이 제각각이고 계정 주소 표기도 통일되어 있지 않습니다. 판별에 실패하면 협업 경험 명단 자체를 만들 수 없습니다. 계정 주소 형식 통일과 사람이 직접 합치는 화면을 1주차에 함께 넣습니다.</p>
+          </div>
+        </div>
+        <div class="risk-r">
+          <div class="risk-k">R2</div>
+          <div>
+            <b>개인정보 노출</b>
+            <p>현재 검수시트에 실명 · 연락처 · 자택 주소가 평문으로 있습니다. 암호화와 열람 제한은 데이터 구조를 짤 때 넣어야 하며, 이후에는 붙이기 어렵습니다.</p>
+          </div>
+        </div>
+        <div class="risk-r">
+          <div class="risk-k">R3</div>
+          <div>
+            <b>30일 안에 정산까지</b>
+            <p>할 일이 넘칠 수 있습니다. 정산은 기록과 집계까지를 1차로, 발급과 이체는 2차로 나눌 것을 권합니다.</p>
+          </div>
+        </div>
+        <div class="risk-r">
+          <div class="risk-k">R4</div>
+          <div>
+            <b>시트와 시스템이 어긋남</b>
+            <p>두 곳을 동시에 고치면 어느 쪽이 맞는지 알 수 없게 됩니다. 끊는 날짜를 확정하고 그 뒤로 시트는 보기 전용으로 잠급니다.</p>
+          </div>
+        </div>
+        <div class="risk-r">
+          <div class="risk-k">R5</div>
+          <div>
+            <b>한 거래처 비중이 큼</b>
+            <p>캠페인의 약 40%가 한 거래처입니다. 그쪽 요구사항에 데이터 구조가 끌려가지 않도록, 브랜드별 차이는 설정으로 처리하고 데이터 구조는 범용으로 유지합니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>SIRIAI 서비스 시스템 구축</span>
+    <span>DRAFT v0.2 · 2026.08.12</span>
+  </div>
+</footer>
