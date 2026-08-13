@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getBrandView } from '@/lib/public'
-import { getDb, cnt, rate, ymd } from '@/lib/db'
+import { getDb, cnt, rate, ymd, won } from '@/lib/db'
 import {
   STAGES, stageForDemo, pickLive, stageIndex, stageMeta, needsBrand, type StageKey,
 } from '@/lib/stages'
@@ -46,7 +46,6 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
     const picked = parts.filter((p) => p.selected)
     const contents = picked.filter((p) => p.contentUrl?.startsWith('http')).slice(0, 9)
     const people = picked.filter((p) => p.handleUrl).sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
-    const reach = picked.reduce((s, p) => s + (p.estViews ?? 0), 0)
 
     // 계정 주소가 있는 행만 브랜드에게 보여준다
     const sheet: SheetRow[] = parts.filter((p) => p.handleUrl).slice(0, 40).map((p, i) => ({
@@ -110,10 +109,11 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
                 <span className="v">{cnt(one.counts.uploaded)}</span>
                 <span className="s">업로드율 {rate(one.rates.upload)}</span>
               </div>
+              {/* 합산 예상 노출은 두지 않는다. 성과를 약속하는 숫자처럼 읽힌다. */}
               <div>
-                <span className="k">EST. REACH</span>
-                <span className="v">{reach >= 10000 ? `${Math.round(reach / 10000)}만` : cnt(reach)}</span>
-                <span className="s">예상 노출</span>
+                <span className="k">BUDGET</span>
+                <span className="v" style={{ fontSize: 22 }}>{won(one.finance.revenue)}</span>
+                <span className="s">집행 금액</span>
               </div>
               <div>
                 <span className="k">납품</span>

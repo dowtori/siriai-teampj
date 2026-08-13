@@ -278,6 +278,33 @@
 .ptile .go2{position:absolute;right:11px;bottom:11px;z-index:3;color:rgba(255,255,255,.85);font-size:13px}
 .ptile .go2:hover{color:#fff}
 
+/* ═══ 선택 합계 바 ═══
+   스크롤 위치와 상관없이 늘 붙어 있는 줄이다.
+   여기가 화면에서 가장 큰 숫자여야 "지금 몇 명 골랐고 얼마인지"를 찾지 않고 안다. */
+.dr-f:has(.tally){padding-top:18px;padding-bottom:18px;background:var(--card);
+  border-top:1px solid var(--line);box-shadow:0 -10px 24px -18px rgba(0,0,0,.34)}
+.tally{display:flex;align-items:center;gap:14px;width:100%;flex-wrap:wrap}
+.tally-n{display:flex;align-items:baseline;gap:6px}
+.tally-n b{
+  font-family:var(--lt);font-size:30px;font-weight:700;letter-spacing:-.038em;
+  color:var(--accent);font-variant-numeric:tabular-nums;line-height:1;
+}
+.tally-n em{font-style:normal;font-size:14px;font-weight:600;color:var(--ink-3);letter-spacing:-.016em}
+.tally-x{font-size:20px;color:var(--line-3);line-height:1}
+.tally-w{
+  font-family:var(--lt);font-size:26px;font-weight:700;letter-spacing:-.034em;
+  color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;
+}
+.tally-b{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tally-b .btn{padding:12px 22px;font-size:14.5px}
+.tally-b .btn:disabled{opacity:.42;cursor:not-allowed}
+@media(max-width:560px){
+  .tally-n b{font-size:25px}
+  .tally-w{font-size:21px}
+  .tally-b{margin-left:0;width:100%}
+  .tally-b .btn{flex:1}
+}
+
 .pick-more{width:100%;margin-top:14px;padding:14px;border-radius:11px;border:1px solid var(--line);
   background:var(--card-2);font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
 .pick-more:hover{background:var(--line-2);color:var(--ink)}

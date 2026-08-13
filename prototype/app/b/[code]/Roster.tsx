@@ -105,7 +105,7 @@ export default function Roster({
   const toggle = (no: number) => setSel((s) => ({ ...s, [no]: !s[no] }))
   const chosen = rows.filter((r) => sel[r.no])
   const sum = chosen.reduce((s, r) => s + (r.fee ?? 0), 0)
-  const reach = chosen.reduce((s, r) => s + (r.estViews ?? 0), 0)
+  /* 합산 노출은 보여주지 않는다. 성과를 보장하는 것처럼 읽힌다. */
 
   const allOn = chosen.length === rows.length
   const toggleAll = () =>
@@ -132,21 +132,30 @@ export default function Roster({
         title="선정 인원 컨펌"
         meta={`${campaign} · 제안 ${rows.length}명`}
         footer={
-          <>
-            <button className="btn pri" onClick={() => { setDone(true); setOpen(false) }}>
-              {chosen.length}명 컨펌하기
-            </button>
-            <button className="btn" onClick={() => setOpen(false)}>닫기</button>
-            <span style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--ink-3)' }}>
-              제안비용 {w(sum)} · 예상 노출 {n(reach)}
+          /* 고른 수량과 비용은 스크롤과 무관하게 늘 크게 보인다.
+             찾아내야 아는 정보가 아니라 먼저 눈에 띄는 정보여야 한다. */
+          <div className="tally">
+            <span className="tally-n">
+              <b>{chosen.length}</b>
+              <em>/ {rows.length}명</em>
             </span>
-          </>
+            <span className="tally-x">·</span>
+            <span className="tally-w">{w(sum)}</span>
+            <span className="tally-b">
+              <button className="btn" onClick={() => setOpen(false)}>닫기</button>
+              <button
+                className="btn pri"
+                disabled={chosen.length === 0}
+                onClick={() => { setDone(true); setOpen(false) }}
+              >
+                컨펌하기
+              </button>
+            </span>
+          </div>
         }
       >
         <div className="pick-h">
-          <span className="cntx">
-            <b>{chosen.length}</b> / {rows.length}명 선택
-          </span>
+          <span className="cntx">제안 {rows.length}명</span>
           <button className="btn" style={{ padding: '7px 13px', fontSize: 12.5 }} onClick={toggleAll}>
             {allOn ? '전체 해제' : '전체 선택'}
           </button>
