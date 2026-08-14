@@ -93,7 +93,7 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
                   <span>제안드린 인원을 확인해 주시면 제품 발송이 시작됩니다.</span>
                 </span>
                 <span className="right">
-                  <Roster rows={sheet} campaign={one.name.replace(/^\[[^\]]+\]\s*/, '')} total={picked.length} />
+                  <Roster key={one.id} id={one.id} rows={sheet} campaign={one.name.replace(/^\[[^\]]+\]\s*/, '')} total={picked.length} />
                 </span>
               </div>
             )}
@@ -129,7 +129,7 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
                 <h2>선정 인원</h2>
                 <p>{picked.length}명</p>
                 <div className="right">
-                  <Roster rows={sheet} campaign={one.name.replace(/^\[[^\]]+\]\s*/, '')} total={picked.length} />
+                  <Roster key={one.id} id={one.id} rows={sheet} campaign={one.name.replace(/^\[[^\]]+\]\s*/, '')} total={picked.length} />
                 </div>
               </div>
               <div className="people">
@@ -160,7 +160,7 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
             </section>
           )}
 
-          <Closing brand={brand.name} code={code} n={campaigns.length} />
+          <Closing brand={brand.name} code={code} n={campaigns.length} scope={one.id} />
         </div></div>
       </div>
     )
@@ -219,7 +219,7 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
             <p>눌러서 그 단계만 볼 수 있습니다</p>
             {filter && (
               <div className="right">
-                <Link className="pbtn ghost" href={`/b/${code}`}>필터 해제</Link>
+                <Link replace className="pbtn ghost" href={`/b/${code}`}>필터 해제</Link>
               </div>
             )}
           </div>
@@ -233,7 +233,7 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
                 on ? 'sel' : '',
               ].filter(Boolean).join(' ')
               return (
-                <Link key={s.key} href={on ? `/b/${code}` : `/b/${code}?s=${s.key}`} className={cls}>
+                <Link replace key={s.key} href={on ? `/b/${code}` : `/b/${code}?s=${s.key}`} className={cls}>
                   {rows.length > 0 && <span className="on-mark" />}
                   <span className="sn">STEP {stageIndex(s.key) + 1}</span>
                   <span className="sv">{rows.length}</span>
@@ -262,7 +262,7 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
                 const si = stageIndex(st)
                 const up = c.rates.upload ?? 0
                 return (
-                  <Link className="bcard" key={c.id} href={`/b/${code}?c=${c.id}`}>
+                  <Link className="bcard" key={c.id} href={`/b/${code}?c=${c.id}${filter ? `&s=${filter}` : ''}`}>
                     <div>
                       <div className="bt">{c.name.replace(/^\[[^\]]+\]\s*/, '')}</div>
                       <div className="bs">
@@ -293,13 +293,15 @@ export default async function BrandPage(props: PageProps<'/b/[code]'>) {
           )}
         </section>
 
-        <Closing brand={brand.name} code={code} n={campaigns.length} />
+        <Closing brand={brand.name} code={code} n={campaigns.length} scope="home" />
       </div></div>
     </div>
   )
 }
 
-function Closing({ brand, code, n }: { brand: string; code: string; n: number }) {
+/* 문의는 캠페인마다 따로다.
+   id 를 코드 단위로 두면 A 에 문의한 것이 B 에서도 '접수됨'으로 뜬다. */
+function Closing({ brand, code, n, scope }: { brand: string; code: string; n: number; scope: string }) {
   return (
     <>
       <section className="pub-in pub-end">
@@ -307,7 +309,7 @@ function Closing({ brand, code, n }: { brand: string; code: string; n: number })
         <p>이번 캠페인에서 반응이 좋았던 인플루언서를 기준으로 다음 명단을 제안드릴 수 있습니다.</p>
         <div className="pub-btns">
           <Act
-            id={`b-ask-${code}`} variant="pbtn" label="담당자에게 문의" doneLabel="문의 접수됨"
+            id={`b-ask-${code}-${scope}`} variant="pbtn" label="담당자에게 문의" doneLabel="문의 접수됨"
             eyebrow="CONTACT" title="담당자에게 문의"
             fields={[
               { name: 'kind', label: '문의 종류', type: 'select', value: '다음 캠페인 제안',

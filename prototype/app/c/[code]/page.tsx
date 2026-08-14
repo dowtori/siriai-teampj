@@ -54,7 +54,10 @@ export default async function CreatorPage(props: PageProps<'/c/[code]'>) {
         <div className="mob-in">
           <span className="mk">SIRIAI</span>
           <div className="right">
-            <span className="code-chip">{v.code}</span>
+            {/* 알림톡 링크로 바로 들어온 사람도 나갈 수 있어야 한다 */}
+            <Link className="code-chip out" href="/c" title="다른 코드로 들어가기">
+              {v.code}
+            </Link>
           </div>
         </div>
       </header>

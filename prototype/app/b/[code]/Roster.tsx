@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Modal } from '@/app/ui/Overlay'
 import { embedUrl, useAlive } from '../Embed'
 
@@ -88,14 +88,26 @@ function Shot({ url, label }: { url: string | null; label: string }) {
 }
 
 export default function Roster({
-  rows, campaign, total,
+  rows, campaign, total, id,
 }: {
   rows: SheetRow[]
   campaign: string
   total: number
+  /** 캠페인 식별자 — 컨펌 완료를 캠페인별로 남긴다 */
+  id: string
 }) {
   const [open, setOpen] = useState(false)
+
+  /* 홈을 거쳤다 돌아와도 방금 끝낸 컨펌이 남아 있어야 한다.
+     화면 상태로만 두면 다시 '컨펌을 기다리고 있습니다'로 되돌아간다. */
   const [done, setDone] = useState(false)
+  useEffect(() => {
+    try { setDone(sessionStorage.getItem('roster:' + id) === '1') } catch { /* 무시 */ }
+  }, [id])
+  const markDone = () => {
+    setDone(true)
+    try { sessionStorage.setItem('roster:' + id, '1') } catch { /* 무시 */ }
+  }
   const [view, setView] = useState<View>('g3')
   const [limit, setLimit] = useState(PAGE.g3)
   const [sel, setSel] = useState<Record<number, boolean>>(
@@ -146,7 +158,7 @@ export default function Roster({
               <button
                 className="btn pri"
                 disabled={chosen.length === 0}
-                onClick={() => { setDone(true); setOpen(false) }}
+                onClick={() => { markDone(); setOpen(false) }}
               >
                 컨펌하기
               </button>

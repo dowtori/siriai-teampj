@@ -39,9 +39,15 @@ const BOTTOM: Group[] = [
   { label: '관리 · 설정', href: '/settings' },
 ]
 
-const EXACT = ['/', '/campaigns', '/sales']
+const EXACT = ['/', '/sales']
+/* /campaigns 아래 다른 메뉴가 있어 단순 startsWith 로는 겹친다.
+   상세(/campaigns/{id})는 목록 항목이 켜져야 한다. */
+const SIBLINGS = ['/campaigns/recruit', '/campaigns/delivery', '/campaigns/review', '/campaigns/influencers']
 
 function isOn(path: string, href: string) {
+  if (href === '/campaigns') {
+    return path === '/campaigns' || (path.startsWith('/campaigns/') && !SIBLINGS.some((s) => path.startsWith(s)))
+  }
   return EXACT.includes(href) ? path === href : path.startsWith(href)
 }
 

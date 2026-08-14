@@ -1,24 +1,48 @@
 'use client'
 
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 /* 정보 층위의 2·3단.
    1단은 화면에 있는 큰 수치와 목록,
    2단은 슬라이드오버(맥락을 잃지 않고 한 건을 본다),
    3단은 모달(한 가지 일에 집중한다). */
 
+/* 겹쳐 뜬 것의 수를 센다.
+   드로어 위에 모달이 겹친 상태에서 Esc 를 누르면 둘이 같은 커밋에서 닫히는데,
+   각자 "열기 전 값"을 기억했다 되돌리면 서로의 hidden 을 되살려 스크롤이 잠긴 채 남는다.
+   0 이 될 때만 푼다. */
+let locks = 0
+
+function lock() {
+  if (locks === 0) document.body.style.overflow = 'hidden'
+  locks += 1
+}
+
+function unlock() {
+  locks = Math.max(0, locks - 1)
+  if (locks === 0) document.body.style.overflow = ''
+}
+
 function useOverlay(open: boolean, onClose: () => void) {
+  // onClose 가 매 렌더 새 함수여도 효과가 다시 돌지 않게 잡아둔다
+  const close = useRef(onClose)
+  close.current = onClose
+
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close.current() }
+    /* 겹쳐 뜬 것이 있으면 뒤로가기는 그것부터 닫는다.
+       안 그러면 모달은 떠 있는데 뒤에 깔린 화면만 바뀐다. */
+    const onPop = () => close.current()
+    lock()
     document.addEventListener('keydown', onKey)
+    window.addEventListener('popstate', onPop)
     return () => {
-      document.body.style.overflow = prev
+      unlock()
       document.removeEventListener('keydown', onKey)
+      window.removeEventListener('popstate', onPop)
     }
-  }, [open, onClose])
+  }, [open])
 }
 
 export function Drawer({

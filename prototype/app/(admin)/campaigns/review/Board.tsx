@@ -152,15 +152,31 @@ function Sheet({ camp, people, camps }: { camp: CampRow; people: Person[]; camps
     return t
   }, [people, store])
 
+  /* 거르는 중에 방금 처리한 줄이 사라지면 마지막으로 뭘 했는지 확인할 수 없다.
+     걸러진 목록은 그 화면을 여는 순간의 명단으로 고정한다. */
+  const [frozen, setFrozen] = useState<string[] | null>(null)
+  useEffect(() => {
+    if (!filter || !store) { setFrozen(null); return }
+    const keep = people
+      .filter((p) => (filter === 'none' || filter === 'post')
+        ? personStatus(p, store) === filter
+        : p.uploads.some((u) => uploadStatus(u, store) === filter))
+      .map((p) => p.key)
+    setFrozen(keep)
+    // filter 가 바뀔 때만 다시 잡는다 — 체크할 때마다 다시 잡으면 의미가 없다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter])
+
   const shown = useMemo(() => {
     const list = people.filter((p) => p.selected || p.uploads.length > 0)
     if (!store || !filter) return list
+    if (frozen) return list.filter((p) => frozen.includes(p.key))
     if (filter === 'none' || filter === 'post') {
       return list.filter((p) => personStatus(p, store) === filter)
     }
     // 건 상태는 그 상태인 콘텐츠를 하나라도 가진 사람을 남긴다
     return list.filter((p) => p.uploads.some((u) => uploadStatus(u, store) === filter))
-  }, [people, store, filter])
+  }, [people, store, filter, frozen])
 
   const picked = Object.keys(sel).filter((k) => sel[k])
   const pickedUploads = uploads.filter((x) => sel[x.p.key]).map((x) => x.u.id)
@@ -424,7 +440,9 @@ function Desk({
         open && (
           <>
             <button className="btn pri" onClick={onNext}>
-              {left === 0 ? '다음 건으로 →' : '이대로 다음 건 →'}
+              {index + 1 >= total
+                ? '마지막 건입니다 · 닫기'
+                : left === 0 ? '다음 건으로 →' : '이대로 다음 건 →'}
             </button>
             <button className="btn" onClick={onClose}>닫기</button>
             <a className="btn" href={open.u.url} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto' }}>

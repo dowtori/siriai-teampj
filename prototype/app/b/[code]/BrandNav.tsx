@@ -102,6 +102,10 @@ export default function BrandNav({
         <Link href={`/b/${code}`} className={!cur && !curStage ? 'on' : undefined}>
           <span className="d" />전체 현황
         </Link>
+        {/* 대행사 담당자가 브랜드를 바꿔 볼 때 레일에서 바로 나간다 */}
+        <Link href="/b" className="out">
+          <span className="d" />다른 코드로 보기
+        </Link>
       </nav>
 
       {GROUPS.map((g) => {
