@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Drawer, Modal } from '@/app/ui/Overlay'
 import Thread from './Thread'
+import { useNotices } from '../Notices'
 
 export type CardVM = {
   id: string
@@ -43,8 +44,17 @@ const rate = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%
 const ymd = (d: string | null) => (d ? d.slice(2).replace(/-/g, '.') : '—')
 
 export default function CampaignsView({ cards }: { cards: CardVM[] }) {
+  const nt = useNotices()
   const [view, setView] = useState<'board' | 'list'>('board')
   const [open, setOpen] = useState<CardVM | null>(null)
+
+  /* 카드를 열면 그 캠페인에 걸려 있던 새 항목이 확인 처리된다.
+     탭을 스치는 것으로는 안 줄고, 실제로 그 건을 열어야 줄어든다. */
+  const show = (c: CardVM) => { setOpen(c); nt?.readCampaign(c.id) }
+  const mark = (id: string) => {
+    const n = nt?.forCampaign(id).length ?? 0
+    return n > 0 ? <span className="cnew">{n}</span> : null
+  }
   const [review, setReview] = useState(false)
   const [limit, setLimit] = useState(12)
 
@@ -77,9 +87,9 @@ export default function CampaignsView({ cards }: { cards: CardVM[] }) {
                   </div>
                   <div className="cards">
                     {items.slice(0, 5).map((c) => (
-                      <button className="ccard" key={c.id} onClick={() => setOpen(c)}>
+                      <button className="ccard" key={c.id} onClick={() => show(c)}>
                         <div>
-                          <div className="ct">{c.name}</div>
+                          <div className="ct">{mark(c.id)}{c.name}</div>
                           <div className="cb" style={{ marginTop: 5 }}>{c.brand}</div>
                         </div>
                         <div className="cf">
@@ -111,10 +121,10 @@ export default function CampaignsView({ cards }: { cards: CardVM[] }) {
         <div className="panel">
           <div className="rows">
             {list.slice(0, limit).map((c) => (
-              <button className="row" key={c.id} onClick={() => setOpen(c)}>
+              <button className="row" key={c.id} onClick={() => show(c)}>
                 <span className={`dot ${c.tone}`} />
                 <span className="lead">
-                  <span className="t">{c.name}</span>
+                  <span className="t">{mark(c.id)}{c.name}</span>
                   <span className="s">{c.brand} · {c.month} · {c.stageLabel}</span>
                 </span>
                 <span className="tail">

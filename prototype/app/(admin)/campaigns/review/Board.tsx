@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Drawer } from '@/app/ui/Overlay'
 import Act from '@/app/ui/Act'
 import { embedUrl, useAlive } from '@/app/b/Embed'
+import { useNotices } from '../../Notices'
 import {
   PRE, CON, POST, STATUS_LABEL,
   load, save, progress, personStatus, uploadStatus,
@@ -41,6 +42,12 @@ export default function Board({
   one: CampRow | null
   people: Person[]
 }) {
+  const nt = useNotices()
+  const mark = (id: string) => {
+    const n = nt?.forCampaign(id).length ?? 0
+    return n > 0 ? <span className="cnew">{n}</span> : null
+  }
+
   /* ─────────── 캠페인 목록 ─────────── */
   if (!one) {
     return (
@@ -63,10 +70,14 @@ export default function Board({
           <div className="panel">
             <div className="rows">
               {camps.slice(0, 20).map((c) => (
-                <Link className="row" key={c.id} href={`/campaigns/review?c=${c.id}`}>
+                <Link
+                  className="row" key={c.id}
+                  href={`/campaigns/review?c=${c.id}`}
+                  onClick={() => nt?.readCampaign(c.id)}
+                >
                   <span className={`dot ${c.uploads > 0 ? 'live' : 'issue'}`} />
                   <span className="lead">
-                    <span className="t">{c.name}</span>
+                    <span className="t">{mark(c.id)}{c.name}</span>
                     <span className="s">
                       {c.brand} · {c.month}
                       {c.due ? ` · 납품 ${c.due.slice(5).replace('-', '/')}` : ''}

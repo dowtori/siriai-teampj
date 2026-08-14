@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getDb, cnt, won, ymd } from '@/lib/db'
 import { getPrefill } from '@/lib/public'
@@ -53,7 +54,12 @@ export default async function ApplyPage(props: PageProps<'/apply/[id]'>) {
     <div className="pub">
       <header className="pub-top">
         <div className="pub-in">
-          <span className="mk">SIRIAI</span>
+          {/* 코드로 들어온 사람은 자기 화면으로, 링크만 받은 사람은 코드 입력으로 돌아간다.
+              돌아갈 수단이 없으면 이 페이지가 막다른 길이 된다. */}
+          <Link className="pub-back" href={back ?? '/c'}>
+            <span aria-hidden>←</span>
+            {back ? '내 캠페인' : '인플루언서 페이지'}
+          </Link>
           <span className="who">{brand} 캠페인 지원</span>
           <div className="right">
             <span className="code-chip">모집 중</span>

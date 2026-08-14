@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useNotices } from './Notices'
 
 /* 매일 쓰는 영역(홈 · 대시보드 · 세일즈 · 캠페인)을 위에,
    진입 빈도가 다른 영역(정산 · 관리)을 구분선 아래에 둔다. */
@@ -45,29 +45,15 @@ function isOn(path: string, href: string) {
   return EXACT.includes(href) ? path === href : path.startsWith(href)
 }
 
-export default function Nav({ badges = {} }: { badges?: Record<string, number> }) {
+export default function Nav() {
   const path = usePathname()
+  const nt = useNotices()
 
-  /* 한 번 들어가 본 탭은 표시를 지운다. 새로 생기면 다시 붙는다. */
-  const [seen, setSeen] = useState<Record<string, true>>({})
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem('nav:seen')
-      if (raw) setSeen(JSON.parse(raw) as Record<string, true>)
-    } catch { /* 무시 */ }
-  }, [])
-  useEffect(() => {
-    setSeen((s) => {
-      if (s[path]) return s
-      const next = { ...s, [path]: true as const }
-      try { sessionStorage.setItem('nav:seen', JSON.stringify(next)) } catch { /* 무시 */ }
-      return next
-    })
-  }, [path])
-
+  /* 숫자는 "아직 확인하지 않은 새 항목" 이다.
+     탭에 들어가는 것으로는 줄지 않는다. 항목을 확인해야 줄어든다. */
   const badge = (href: string) => {
-    const n = badges[href] ?? 0
-    if (!n || seen[href]) return null
+    const n = nt?.countFor(href) ?? 0
+    if (!n) return null
     return <span className="nb">{n > 99 ? '99+' : n}</span>
   }
 
@@ -83,7 +69,7 @@ export default function Nav({ badges = {} }: { badges?: Record<string, number> }
     }
     const open = g.items.some((i) => isOn(path, i.href))
     // 접힌 그룹은 하위 표시를 모아서 머리에 붙인다
-    const sum = g.items.reduce((n, i) => n + (seen[i.href] ? 0 : (badges[i.href] ?? 0)), 0)
+    const sum = g.items.reduce((n, i) => n + (nt?.countFor(i.href) ?? 0), 0)
     return (
       <div className="grp" key={g.label}>
         <p className={`gh ${open ? 'on' : ''}`}>

@@ -768,3 +768,18 @@
 }
 .brail .stg-i{display:flex;align-items:center}
 .brail .stg-h{display:flex;align-items:center;gap:7px}
+
+/* 돌아갈 수단 — 공개 페이지의 머리에 항상 둔다 */
+.pub-back{
+  display:inline-flex;align-items:center;gap:8px;flex:none;
+  padding:7px 14px 7px 11px;border-radius:100px;border:1px solid var(--line);
+  font-size:13px;font-weight:600;letter-spacing:-.016em;color:var(--ink-2);
+  transition:background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease);
+}
+.pub-back:hover{background:var(--card);color:var(--ink);border-color:var(--line-3)}
+.pub-back span{font-size:14px;line-height:1}
+.pub-top .pub-back + .who{padding-left:16px;border-left:1px solid var(--line)}
+@media(max-width:560px){
+  .pub-top .pub-back + .who{padding-left:0;border-left:0}
+  .pub-back{padding:7px 11px}
+}
