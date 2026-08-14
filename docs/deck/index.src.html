@@ -120,7 +120,7 @@ body{
 
 /* ── layered (s3) ── */
 .lay{display:flex;flex-direction:column;gap:.85cqw}
-.lay .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1cqw}
+.lay .row3{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1cqw}
 .lay .band{width:100%}
 .lay .tie{height:1.5cqw;position:relative;flex:none}
 .lay .tie::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-3)}
@@ -259,7 +259,7 @@ body{
     <div class="facts">
       <div><b>30<i>일</i></b><span>착수부터 실제 운영 전환까지</span></div>
       <div><b>4<i>인</i></b><span>4개 파트로 나눠 동시 진행</span></div>
-      <div><b>3<i>개</i></b><span>어드민 · 브랜드 · 인플루언서</span></div>
+      <div><b>4<i>개</i></b><span>어드민 · 브랜드 · 인플루언서 · 지원 페이지</span></div>
       <div><b>20,347</b><span>옮겨올 인플루언서 명단</span></div>
     </div>
   </section>
@@ -275,7 +275,7 @@ body{
         <button class="it" data-c="src" data-d="a3"><span class="t">콘텐츠 검수시트</span><span class="s">3단계 체크리스트</span></button>
         <button class="it" data-c="src" data-d="a4"><span class="t">가이드 · 지원 페이지</span><span class="s">캠페인별 자체 웹페이지</span></button>
         <button class="it" data-c="src" data-d="a5"><span class="t">슬랙 · 드라이브</span><span class="s">정산자료 · 콘텐츠 보관</span></button>
-        <button class="it" data-c="src" data-d="a6"><span class="t">NoxInfluencer</span><span class="s">원본 20,347건</span></button>
+        <button class="it" data-c="src" data-d="a6"><span class="t">인플루언서 로우데이터</span><span class="s">원본 20,347건</span></button>
       </div>
     </div>
     <div class="det"></div>
@@ -289,8 +289,9 @@ body{
       <div class="lay">
         <div class="row3">
           <button class="it" data-c="db" data-d="s1"><span class="t">어드민</span><span class="s">내부 운영 전체</span></button>
-          <button class="it" data-c="be" data-d="s2"><span class="t">브랜드</span><span class="s">고객사 · 광고 랜딩 겸용</span></button>
+          <button class="it" data-c="be" data-d="s2"><span class="t">브랜드</span><span class="s">고객사 · 접근 코드 진입</span></button>
           <button class="it" data-c="ui" data-d="s3"><span class="t">인플루언서</span><span class="s">개인 코드 진입</span></button>
+          <button class="it" data-c="src" data-d="s4"><span class="t">지원 페이지</span><span class="s">캠페인별 공개 랜딩</span></button>
         </div>
         <div class="tie"></div>
         <button class="it band" data-d="s4"><span class="t">서버 · 업무 처리 · 권한 관리</span><span class="s">누가 무엇을 볼 수 있는지 데이터베이스에서 정합니다</span></button>
@@ -324,8 +325,8 @@ body{
     <p class="sub">매일 쓰는 영역과 주기적으로 쓰는 영역을 내비게이션에서 분리합니다.</p>
     <div class="bd">
       <div class="grid g4">
-        <button class="it" data-d="m1"><span class="t">홈</span><span class="s">오늘 할 일</span></button>
-        <button class="it" data-d="m2"><span class="t">대시보드</span><span class="s">매출 · 진행 지표</span></button>
+        <button class="it" data-d="m1"><span class="t">홈</span><span class="s">전체 진행 상황</span></button>
+        <button class="it" data-d="m2"><span class="t">대시보드</span><span class="s">오늘 할 일</span></button>
         <button class="it" data-d="m3"><span class="t">세일즈</span><span class="s">거래처 · 제안</span></button>
         <button class="it" data-d="m4"><span class="t">캠페인</span><span class="s">모집 · 선정 · 검수</span></button>
         <button class="it" data-c="src" data-d="m5"><span class="t">정산</span><span class="s">하단 분리 영역</span></button>
@@ -456,7 +457,7 @@ body{
 /* ── 상세 데이터 ─────────────────────────────────────── */
 const D = {
  a1:{k:'옮겨올 데이터',t:'마스터시트',m:'SIRIAI 프로젝트관리 · 34개 항목',b:[
-   '캠페인 약 66건 (26년 2–8월). 모든 하위 시트 링크가 여기서 갈라집니다.',
+   '캠페인 138건 (26년 2–8월). 모든 하위 시트 링크가 여기서 갈라집니다.',
    '프로젝트 정보 / 마감일정 / 콘텐츠 업로드 / 매출 네 영역',
    ['매출을 잡는 기준은 <strong>세금계산서 발급일</strong>',1]]},
  a2:{k:'옮겨올 데이터',t:'캠페인 진행시트',m:'브랜드별 통합 시트 · 탭 하나가 캠페인 한 회차',b:[
@@ -472,11 +473,11 @@ const D = {
    '26년 2–3월은 노션으로 만들다가 4월부터 자체 페이지로 바꿨습니다.',
    'moev-invite · teumgyul · gnpowersiriai254 등 캠페인마다 따로 배포',
    '하반기 공용 소개 페이지도 같은 방식 — oddtype-inviteb · siriai-skincare',
-   ['캠페인마다 페이지를 새로 만드는 이 일을 <strong>인플루언서 페이지가 대신합니다.</strong>',1]]},
+   ['캠페인마다 페이지를 새로 만드는 이 일을 <strong>캠페인 지원 페이지가 대신합니다.</strong> 캠페인을 등록하면 지원 페이지가 같이 만들어집니다.',1]]},
  a5:{k:'옮겨올 데이터',t:'슬랙 · 드라이브',m:'정산자료 수령 · 콘텐츠 보관',b:[
    '인플루언서 정산자료를 슬랙으로 받고 드라이브에 보관 중',
    ['주민번호 · 통장사본이 <strong>그대로 오갑니다</strong> — 시스템으로 옮기는 것 자체가 보안 개선입니다.',1]]},
- a6:{k:'옮겨올 데이터',t:'NoxInfluencer',m:'원본 20,347건',b:[
+ a6:{k:'옮겨올 데이터',t:'인플루언서 로우데이터',m:'20,347건',b:[
    '유튜브 867 · 인스타 16,268 · 틱톡 3,212',
    '이메일 확보 9,532건 (46.8%)',
    '폴더 40종이 사실상 분류표 역할을 하고 있습니다.',
@@ -487,9 +488,10 @@ const D = {
    '메뉴 아래쪽 — 정산 · 관리(설정)',
    '캠페인 화면은 지금 쓰는 검수 체크리스트를 그대로 진행 순서로 씁니다.']},
  s2:{k:'화면',t:'브랜드',m:'고객사 · 코드를 받아 들어옴',b:[
-   '진행 캠페인 현황 · 선정 인플루언서 · 콘텐츠 링크 · 리포트',
-   ['기존 <strong>siriai-sales</strong>의 코드 입력 방식을 그대로 넓힙니다.',1],
-   '조금 바꿔서 광고 / 영업메일 도착 페이지로도 씁니다.']},
+   ['컨펌 단계 캠페인에서 <strong>명단 확인하기</strong> — 목록 / 3×3 / 5×5 로 보고 골라 확정합니다.',1],
+   '진행 캠페인 현황 · 올라온 콘텐츠 · 리포트. 게시물은 링크가 아니라 화면에 그대로 박힙니다.',
+   '좌측은 6단계를 브랜드가 할 일 기준 세 덩어리로 묶습니다 — 확인 필요 / 진행중 / 마감.',
+   ['기존 <strong>siriai-sales</strong>의 코드 입력 방식을 그대로 넓힙니다.',1]]},
  s3:{k:'화면',t:'인플루언서',m:'개인 코드를 받아 들어옴',b:[
    '진행중인 캠페인 · 지원 가능한 캠페인',
    '콘텐츠 제출 · 정산자료 제출',
@@ -501,7 +503,7 @@ const D = {
  s5:{k:'데이터',t:'데이터베이스',m:'PostgreSQL · Supabase',b:[
    '브랜드 · 캠페인 · 캠페인 참여 · 인플루언서 · 정산 · 조회 기록',
    ['실명 · 연락처 · 주소는 <strong>항목 단위로 암호화</strong>합니다.',1],
-   '세 화면이 모두 이 한 곳만 바라봅니다.']},
+   '네 화면이 모두 이 한 곳만 바라봅니다.']},
 
  d1:{k:'핵심 데이터',t:'브랜드',m:'거래처 정보',b:[
    '거래처 약 20개사 · 담당자 · 계약 · 단가 정책',
@@ -522,9 +524,16 @@ const D = {
    '시점별 지표 기록 · 분류 태그 · 참여 이력',
    '같은 사람인지 판별하는 기준은 형식을 통일한 계정 주소입니다.']},
 
- m1:{k:'어드민',t:'홈',m:'오늘 할 일',b:['마감 임박 캠페인','알림 · 승인 대기']},
- m2:{k:'어드민',t:'대시보드',m:'매출 · 진행 지표',b:[
-   '매출 · 순이익 · 마진율','업로드율 · 컨펌율','미수금 · 입금 현황','거래처별 · 월별 추이']},
+ s4:{k:'화면',t:'캠페인 지원 페이지',m:'캠페인별 공개 랜딩',b:[
+   '캠페인 개요 · 제공 제품 · 가이드라인 · 레퍼런스 콘텐츠 · 진행 순서 · 신청 폼',
+   ['캠페인을 등록하면 <strong>지원 페이지가 같이 만들어집니다.</strong>',1],
+   '참여 조건(팔로워 구간 · 협업 이력 · 지역)에 맞는 인원에게만 노출합니다.',
+   '코드로 들어오면 등록된 정보가 미리 채워집니다 — 이대로 제출 / 정보 변경.']},
+
+ m1:{k:'어드민',t:'홈',m:'전체 진행 상황',b:[
+   '매출 · 순이익 · 마진율','캠페인 수 · 협업 계정 수 · 업로드율','거래처별 · 월별 추이','최근 계산서']},
+ m2:{k:'어드민',t:'대시보드',m:'오늘 할 일',b:[
+   '마감 임박','콘텐츠 리마인드','검수','미수금 · 입금 현황']},
  m3:{k:'어드민',t:'세일즈',m:'거래처 · 제안',b:[
    '거래처 · 담당자','제안 · 견적','브랜드 페이지 발급','랜딩 · 리드']},
  m4:{k:'어드민',t:'캠페인',m:'모집 · 선정 · 검수',b:[
@@ -533,7 +542,7 @@ const D = {
    '월간 · 연간 매출 집계','인플루언서 정산','정산자료 · 원천징수',
    ['매일 들어가는 곳이 아니라서 <strong>메뉴 아래쪽으로 뺍니다.</strong>',1]]},
  m6:{k:'하단 분리',t:'관리 · 설정',m:'',b:[
-   '구성원 · 권한','알림 문구','코드 발급','조회 기록']},
+   '구성원 · 권한','알림 문구','접근 코드','조회 기록','거래처 단가','캠페인 단계']},
 
  f0:{k:'1단계',t:'원본 전체',m:'20,347건',b:[
    '유튜브 867 · 인스타 16,268 · 틱톡 3,212',
@@ -576,10 +585,10 @@ const D = {
    ['데이터 — 인플루언서 5단계 명단 · 사람 직접 합치는 화면',1],
    ['화면 — 대시보드 · 캠페인 목록 / 상세',1],
    '인프라 — 역할 · 권한 · 조회 기록']},
- w3:{k:'WEEK 3',t:'외부 화면',m:'주차 목표 — 세 화면 연결 완료',b:[
+ w3:{k:'WEEK 3',t:'외부 화면',m:'주차 목표 — 네 화면 연결 완료',b:[
    '서버 — 브랜드 · 인플루언서용 조회 기능',
    '데이터 — 분류 기준 정리 · 접속 기록',
-   ['화면 — 브랜드 페이지 · 인플루언서 페이지',1],
+   ['화면 — 브랜드 페이지 · 인플루언서 페이지 · 캠페인 지원 페이지',1],
    ['인프라 — 알림 발송 연결',1]]},
  w4:{k:'WEEK 4',t:'정산 · 마감',m:'주차 목표 — 실제 운영 시작',b:[
    ['서버 — 정산 집계 (계산서 발급일 기준)',1],

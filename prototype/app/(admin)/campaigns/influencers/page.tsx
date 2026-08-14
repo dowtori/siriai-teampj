@@ -1,46 +1,70 @@
-import { getDb, cnt, won } from '@/lib/db'
+import { getDb, cnt } from '@/lib/db'
 import Roster, { type CreatorRow } from './Roster'
 
-/* 인플루언서 명단 — 진행시트에서 실제로 협업한 사람들.
-   원본 20,347건 중 여기 남는 건 "함께 일해본" 층위다. */
+/* 인플루언서 명단 — 진행시트를 되짚어 만든 협업 이력이 기준이다.
+   마스터시트의 협업여부 컬럼은 전 건이 같은 값이라 쓸 수 없다.
+   여기에 진행시트에서 나온 팔로워 · ER · 단가를 계정 단위로 얹는다. */
+
+function key(url: string | null, name: string) {
+  let s = (url ?? '').trim()
+  for (const a of ['https://', 'http://', 'www.']) s = s.replaceAll(a, '')
+  for (const h of ['instagram.com/', 'tiktok.com/', 'youtube.com/', 'blog.naver.com/', 'threads.net/']) {
+    s = s.replaceAll(h, '')
+  }
+  s = s.split('?')[0].replace(/^[/@]+|[/@ ]+$/g, '').toLowerCase()
+  return s || name.trim().replace(/^@/, '').toLowerCase()
+}
 
 export default function InfluencersPage() {
   const db = getDb()
 
-  const byHandle = new Map<string, CreatorRow>()
+  // 진행시트 쪽 상세 — 계정 단위로 모은다
+  type Detail = {
+    followers: number | null; er: number | null; fee: number | null
+    picks: number; posts: number; verified: boolean; brands: string[]
+  }
+  const detail = new Map<string, Detail>()
   for (const p of db.participations) {
-    const key = p.handleUrl ?? `name:${p.displayName}`
-    const cur = byHandle.get(key)
-    const campaign = db.campaigns.find((c) => c.id === p.campaignId)
-    if (!cur) {
-      byHandle.set(key, {
-        key,
-        name: p.displayName,
-        url: p.handleUrl,
-        followers: p.followers,
-        er: p.er,
-        proposals: 1,
-        picks: p.selected ? 1 : 0,
-        posts: p.contentUrl ? 1 : 0,
-        fee: p.proposedFee,
-        verified: !!p.pii.realName,
-        brands: campaign?.brandName ? [campaign.brandName] : [],
-      })
-    } else {
-      cur.proposals += 1
-      if (p.selected) cur.picks += 1
-      if (p.contentUrl) cur.posts += 1
-      if ((p.followers ?? 0) > (cur.followers ?? 0)) cur.followers = p.followers
-      if (p.proposedFee && (!cur.fee || p.proposedFee > cur.fee)) cur.fee = p.proposedFee
-      if (p.pii.realName) cur.verified = true
-      if (campaign?.brandName && !cur.brands.includes(campaign.brandName)) cur.brands.push(campaign.brandName)
+    if (!p.handleUrl) continue
+    const k = key(p.handleUrl, p.displayName)
+    const c = db.campaigns.find((x) => x.id === p.campaignId)
+    const cur = detail.get(k) ?? {
+      followers: null, er: null, fee: null, picks: 0, posts: 0, verified: false, brands: [],
     }
+    if ((p.followers ?? 0) > (cur.followers ?? 0)) cur.followers = p.followers
+    if (p.er != null && (cur.er == null || p.er > cur.er)) cur.er = p.er
+    if (p.proposedFee && (!cur.fee || p.proposedFee > cur.fee)) cur.fee = p.proposedFee
+    if (p.selected) cur.picks += 1
+    if (p.contentUrl) cur.posts += 1
+    if (p.pii.realName) cur.verified = true
+    if (c?.brandName && !cur.brands.includes(c.brandName)) cur.brands.push(c.brandName)
+    detail.set(k, cur)
   }
 
-  const rows = [...byHandle.values()].sort((a, b) => b.picks - a.picks || b.proposals - a.proposals)
-  const worked = rows.filter((r) => r.picks > 0).length
-  const verified = rows.filter((r) => r.verified).length
-  const repeat = rows.filter((r) => r.picks > 1).length
+  const rows: CreatorRow[] = (db.creators ?? []).map((cr) => {
+    const d = detail.get(cr.handle)
+    return {
+      key: cr.id,
+      handle: cr.handle,
+      name: cr.name,
+      url: cr.url,
+      platform: cr.platformLabel,
+      worked: cr.campaignCount,
+      campaigns: cr.campaigns,
+      campaignsMore: cr.campaignsMore,
+      followers: d?.followers ?? null,
+      er: d?.er ?? null,
+      fee: d?.fee ?? null,
+      posts: d?.posts ?? 0,
+      verified: d?.verified ?? false,
+      brands: d?.brands ?? [],
+      detailed: !!d,
+    }
+  })
+
+  const repeat = rows.filter((r) => r.worked >= 2).length
+  const regular = rows.filter((r) => r.worked >= 6).length
+  const detailed = rows.filter((r) => r.detailed).length
 
   return (
     <div className="wrap">
@@ -49,21 +73,16 @@ export default function InfluencersPage() {
           <p className="eb">CAMPAIGNS · CREATORS</p>
           <h1>인플루언서 명단</h1>
           <p className="lede">
-            제안했거나 함께 일해본 사람들입니다. 여기서 골라 다음 캠페인에 담습니다.
+            지금까지 함께 일한 사람들입니다. 여기서 골라 다음 캠페인에 담습니다.
           </p>
         </div>
       </div>
 
       <div className="scores">
         <div className="score">
-          <span className="sk">PROPOSED</span>
+          <span className="sk">CREATORS</span>
           <span className="sv">{cnt(rows.length)}</span>
-          <span className="sd">제안한 적 있는 계정</span>
-        </div>
-        <div className="score">
-          <span className="sk">WORKED</span>
-          <span className="sv">{cnt(worked)}</span>
-          <span className="sd">실제 선정되어 진행</span>
+          <span className="sd">협업한 적 있는 계정</span>
         </div>
         <div className="score">
           <span className="sk">REPEAT</span>
@@ -71,9 +90,14 @@ export default function InfluencersPage() {
           <span className="sd">두 번 이상 함께함</span>
         </div>
         <div className="score">
-          <span className="sk">VERIFIED</span>
-          <span className="sv">{cnt(verified)}</span>
-          <span className="sd">실명 · 연락처까지 확보</span>
+          <span className="sk">REGULAR</span>
+          <span className="sv">{cnt(regular)}</span>
+          <span className="sd">여섯 번 이상 — 단골</span>
+        </div>
+        <div className="score">
+          <span className="sk">DETAILED</span>
+          <span className="sv">{cnt(detailed)}</span>
+          <span className="sd">팔로워 · 단가까지 확보</span>
         </div>
       </div>
 

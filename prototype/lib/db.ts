@@ -98,6 +98,22 @@ export interface DB {
   brands: Brand[]
   campaigns: Campaign[]
   participations: Participation[]
+  creators: Creator[]
+}
+
+/* 진행시트를 되짚어 만든 협업 이력.
+   마스터시트의 협업여부 컬럼은 전 건이 같은 값이라, 이쪽이 "누구와 몇 번 일했는지"의 기준이다. */
+export interface Creator {
+  id: string
+  platform: string
+  platformLabel: string
+  handle: string
+  name: string
+  url: string | null
+  campaignCount: number
+  appearances: number
+  campaigns: string[]
+  campaignsMore: number
 }
 
 let cache: DB | null = null

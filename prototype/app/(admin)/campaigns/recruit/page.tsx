@@ -23,26 +23,30 @@ export default function Recruit() {
   const picked = pool.filter((p) => p.on)
   const sum = picked.reduce((s, p) => s + (p.fee ?? 0), 0)
 
-  // 노출 대상 후보 — 계정 기준으로 묶고 협업 횟수를 센다
-  const byHandle = new Map<string, Pool>()
+  /* 노출 대상 후보 — 협업 인플루언서 명단 전체가 모집단이다.
+     협업 횟수는 진행시트를 되짚어 센 값이고, 팔로워 · 지역은 진행시트에서 나온 계정에만 있다. */
+  const info = new Map<string, { followers: number | null; region: string | null }>()
   for (const p of db.participations) {
     if (!p.handleUrl) continue
-    const cur = byHandle.get(p.handleUrl)
-    if (!cur) {
-      byHandle.set(p.handleUrl, {
-        key: p.handleUrl,
-        name: p.displayName,
-        handle: p.handleUrl,
-        followers: p.followers,
-        worked: p.selected ? 1 : 0,
-        region: p.region,
-      })
-    } else {
-      if (p.selected) cur.worked += 1
-      if ((p.followers ?? 0) > (cur.followers ?? 0)) cur.followers = p.followers
-    }
+    const k = p.handleUrl.replace(/^.*instagram\.com\//, '').replace(/^[/@]+|[/@ ]+$/g, '').toLowerCase()
+    const cur = info.get(k) ?? { followers: null, region: null }
+    if ((p.followers ?? 0) > (cur.followers ?? 0)) cur.followers = p.followers
+    if (!cur.region && p.region) cur.region = p.region
+    info.set(k, cur)
   }
-  const pool2 = [...byHandle.values()].sort((a, b) => (b.followers ?? 0) - (a.followers ?? 0))
+
+  const pool2: Pool[] = (db.creators ?? []).map((c) => {
+    const d = info.get(c.handle)
+    return {
+      key: c.id,
+      name: c.name,
+      handle: '@' + c.handle,
+      platform: c.platformLabel,
+      followers: d?.followers ?? null,
+      worked: c.campaignCount,
+      region: d?.region ?? null,
+    }
+  })
 
   return (
     <div className="wrap">

@@ -10,6 +10,7 @@ export type Pool = {
   key: string
   name: string
   handle: string | null
+  platform: string
   followers: number | null
   worked: number
   region: string | null
@@ -22,30 +23,41 @@ const TIERS = [
   { k: 'mid',   l: '5만 이상',     min: 50_000, max: Infinity },
 ] as const
 
+/* 협업 횟수는 진행시트를 되짚어 센 값이라 전 계정에 다 있다. */
 const HIST = [
-  { k: 'any',  l: '전체' },
-  { k: 'done', l: '협업 경험' },
-  { k: 'new',  l: '신규' },
+  { k: 'any',     l: '전체' },
+  { k: 'once',    l: '1회' },
+  { k: 'repeat',  l: '2회 이상' },
+  { k: 'regular', l: '단골 6회+' },
 ] as const
 
+const PLATS = ['전체', '인스타그램', '틱톡', '유튜브', '네이버블로그'] as const
+
 export default function PageBuilder({ pool, campaign }: { pool: Pool[]; campaign: string }) {
-  const [tier, setTier] = useState<string>('micro')
-  const [hist, setHist] = useState<string>('done')
+  const [tier, setTier] = useState<string>('all')
+  const [hist, setHist] = useState<string>('repeat')
+  const [plat, setPlat] = useState<string>('인스타그램')
   const [kr, setKr] = useState(true)
 
   const matched = useMemo(() => {
     const t = TIERS.find((x) => x.k === tier)!
     return pool.filter((p) => {
-      const f = p.followers ?? 0
-      if (f < t.min || f >= t.max) return false
-      if (hist === 'done' && p.worked === 0) return false
-      if (hist === 'new' && p.worked > 0) return false
+      // 팔로워를 모르는 계정은 구간을 걸 수 없다. '전체'일 때만 남긴다.
+      if (tier !== 'all') {
+        if (p.followers == null) return false
+        if (p.followers < t.min || p.followers >= t.max) return false
+      }
+      if (hist === 'once' && p.worked !== 1) return false
+      if (hist === 'repeat' && p.worked < 2) return false
+      if (hist === 'regular' && p.worked < 6) return false
+      if (plat !== '전체' && p.platform !== plat) return false
       if (kr && p.region && p.region !== '한국') return false
       return true
     })
-  }, [pool, tier, hist, kr])
+  }, [pool, tier, hist, plat, kr])
 
-  const top = matched.slice(0, 6)
+  // 많이 함께한 사람부터 보여준다
+  const top = [...matched].sort((a, b) => b.worked - a.worked).slice(0, 6)
 
   return (
     <div className="work">
@@ -92,7 +104,17 @@ export default function PageBuilder({ pool, campaign }: { pool: Pool[]; campaign
                 </div>
               </div>
               <div className="frow">
-                <div className="fl"><b>협업 이력</b><span>처음 제안인지 재협업인지</span></div>
+                <div className="fl"><b>플랫폼</b><span>이 채널 계정만 노출</span></div>
+                <div className="opts">
+                  {PLATS.map((p) => (
+                    <button key={p} className={`opt ${plat === p ? 'on' : ''}`} onClick={() => setPlat(p)}>
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="frow">
+                <div className="fl"><b>협업 이력</b><span>지금까지 함께한 횟수</span></div>
                 <div className="opts">
                   {HIST.map((h) => (
                     <button key={h.k} className={`opt ${hist === h.k ? 'on' : ''}`} onClick={() => setHist(h.k)}>
@@ -142,8 +164,8 @@ export default function PageBuilder({ pool, campaign }: { pool: Pool[]; campaign
               summary={
                 <div className="trio">
                   <div><span className="k">팔로워</span><span className="v" style={{ fontSize: 15 }}>{TIERS.find((t) => t.k === tier)!.l}</span></div>
+                  <div><span className="k">플랫폼</span><span className="v" style={{ fontSize: 15 }}>{plat}</span></div>
                   <div><span className="k">이력</span><span className="v" style={{ fontSize: 15 }}>{HIST.find((h) => h.k === hist)!.l}</span></div>
-                  <div><span className="k">지역</span><span className="v" style={{ fontSize: 15 }}>{kr ? '국내' : '전체'}</span></div>
                 </div>
               }
               confirmLabel="노출하고 알림 보내기"
@@ -165,10 +187,10 @@ export default function PageBuilder({ pool, campaign }: { pool: Pool[]; campaign
               <div className="row" key={p.key} style={{ cursor: 'default', padding: '12px 20px' }}>
                 <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--line-2)', flex: 'none' }} />
                 <span className="lead">
-                  <span className="t" style={{ fontSize: 13.5 }}>{p.name}</span>
+                  <span className="t" style={{ fontSize: 13.5 }}>{p.handle}</span>
                   <span className="s">
-                    {p.followers?.toLocaleString('ko-KR') ?? '—'} 팔로워
-                    {p.worked > 0 ? ` · 협업 ${p.worked}회` : ' · 신규'}
+                    {p.platform} · 협업 {p.worked}회
+                    {p.followers != null ? ` · ${p.followers.toLocaleString('ko-KR')} 팔로워` : ''}
                   </span>
                 </span>
               </div>

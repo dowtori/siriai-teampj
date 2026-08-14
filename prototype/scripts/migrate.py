@@ -9,8 +9,10 @@
 연결 성공률은 그대로 리포트한다 (동일인·동일캠페인 판별이 이 프로젝트 최대 리스크이므로
 숨기지 않고 드러낸다).
 """
-import sys, io, json, re, hashlib, pathlib
+import sys, io, json, re, hashlib, pathlib, datetime
 from collections import defaultdict
+
+import openpyxl
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
@@ -18,8 +20,11 @@ TOOL = pathlib.Path(
     r"C:\Users\WD\.claude\projects\C--Users-WD-Desktop-siriai----siriai-teampj"
     r"\121b005d-05dc-4fa5-bf66-11af67188334\tool-results"
 )
-MASTER = TOOL / "mcp-caa4e976-a14d-4e0f-8b3f-2459cab8950d-read_file_content-1786520894664.txt"
 PARTS  = TOOL / "mcp-caa4e976-a14d-4e0f-8b3f-2459cab8950d-read_file_content-1786585266695.txt"
+# 마스터시트는 xlsx 원본을 쓴다. 텍스트 추출은 탭당 73행에서 잘려 138건 중 68건만 들어왔다.
+MASTER_XLSX = pathlib.Path(__file__).resolve().parent / "master.xlsx"
+# 진행시트를 되짚어 만든 협업 인플루언서 명단 (계정 · 참여 캠페인 수 · 캠페인 목록)
+CREATORS_CSV = pathlib.Path(__file__).resolve().parent / "creators.csv"
 # 실데이터는 db.local.json 에만 쓴다. 배포에 올라가는 db.json 은
 # scripts/anonymize.py 가 가명 처리해서 만든다.
 OUT    = pathlib.Path(__file__).resolve().parents[1] / "data" / "db.local.json"
@@ -107,24 +112,44 @@ NOISE = {":-:", "", "▼", "상태", "캠페인명", "분류", "국가", "거래
 
 
 # ─────────────────────── 1. 마스터시트 ───────────────────────
+def xl_text(v):
+    """xlsx 셀 값을 시트 화면에 보이는 문자열로 되돌린다.
+       아래 money/num/pct/kdate 가 전부 그 표기를 기준으로 만들어져 있다."""
+    if v is None: return ""
+    if isinstance(v, datetime.datetime):
+        return f"{v.year % 100}년 {v.month}월 {v.day}일"
+    if isinstance(v, datetime.date):
+        return f"{v.year % 100}년 {v.month}월 {v.day}일"
+    if isinstance(v, float) and v.is_integer():
+        return str(int(v))
+    return str(v).strip()
+
+
 def parse_master():
-    lines = load(MASTER)
-    hdr = cells(lines[7])
-    ix = {h: i for i, h in enumerate(hdr)}
+    """마스터시트는 xlsx 원본에서 읽는다.
+       텍스트 추출본은 탭당 73행에서 잘려서 절반이 사라진다."""
+    wb = openpyxl.load_workbook(MASTER_XLSX, data_only=True)
+    ws = wb["26년 SIRIAI 프로젝트"]
+
+    hdr = [xl_text(c.value) for c in ws[6]]
+    ix = {h: i for i, h in enumerate(hdr) if h}
 
     def g(cs, key):
         i = ix.get(key)
         return cs[i] if i is not None and i < len(cs) else ""
 
     # 시트 자체 대시보드 표기값 (4~5행) — 행 단위 합계와 대조용
-    dash_keys = [k for k in cells(lines[4]) if k]
-    dash_vals = [v for v in cells(lines[5]) if v]
+    dash_keys = [xl_text(c.value) for c in ws[4] if c.value not in (None, "")]
+    dash_vals = [xl_text(c.value) for c in ws[5] if c.value not in (None, "")]
     sheet_dash = dict(zip(dash_keys[1:], dash_vals)) if len(dash_vals) >= 5 else {}
 
+    rows = []
+    for r in range(7, ws.max_row + 1):
+        rows.append([xl_text(c.value) for c in ws[r]])
+
     seen, out, anon = set(), [], 0
-    for ln in lines[8:]:
-        cs = cells(ln)
-        if len(cs) < 20: continue
+    for cs in rows:
+        if not any(cs): continue
         name = g(cs, "캠페인명")
         junk = (not name) or name in NOISE or "여기서는 데이터를" in name or "모음" in name
 
@@ -350,9 +375,65 @@ def link(campaigns, parts):
 
 
 # ─────────────────────────── 실행 ───────────────────────────
+# ────────────── 3.5 협업 인플루언서 명단 ──────────────
+# 진행시트를 전부 되짚어 "누구와 몇 번 일했는지"를 계정 단위로 모아둔 파일.
+# 마스터시트의 협업여부 컬럼은 전 건이 같은 값이라 쓸 수 없어서, 이쪽을 협업 이력의 기준으로 삼는다.
+
+PLATFORM = {
+    "instagram": "인스타그램", "tiktok": "틱톡", "youtube": "유튜브",
+    "naverblog": "네이버블로그", "naverclip": "네이버클립", "navertv": "네이버TV",
+    "navercreator": "네이버", "naver": "네이버", "threads": "스레드",
+    "twitter": "X", "x": "X", "x.com": "X",
+    "xiaohongshu": "샤오홍슈", "reddit": "레딧", "musinsa": "무신사",
+}
+
+CAMPAIGN_KEEP = 8   # 캠페인 목록은 화면에 보여줄 만큼만 남긴다
+
+
+def norm_handle(url, name):
+    """프로필 주소에서 계정만 남긴다. 같은 사람 판별의 기준."""
+    s = (url or "").strip()
+    for a in ("https://", "http://", "www."):
+        s = s.replace(a, "")
+    for host in ("instagram.com/", "tiktok.com/", "youtube.com/",
+                 "blog.naver.com/", "m.blog.naver.com/", "threads.net/", "threads.com/"):
+        s = s.replace(host, "")
+    s = s.split("?")[0].strip("/@ ").lower()
+    return s or (name or "").strip().lstrip("@").lower()
+
+
+def parse_creators():
+    if not CREATORS_CSV.exists():
+        return []
+    import csv
+    out = []
+    with open(CREATORS_CSV, encoding="utf-8-sig", newline="") as f:
+        for r in csv.DictReader(f):
+            handle = norm_handle(r.get("프로필 링크"), r.get("계정명"))
+            if not handle: continue
+            raw = (r.get("캠페인 목록") or "").split("|")
+            camps = [c.strip() for c in raw if c.strip()]
+            plat = (r.get("플랫폼") or "").strip().lower()
+            out.append({
+                "id": sid("cr", plat + ":" + handle),
+                "platform": plat,
+                "platformLabel": PLATFORM.get(plat, plat or "기타"),
+                "handle": handle,
+                "name": (r.get("계정명") or "").strip(),
+                "url": (r.get("프로필 링크") or "").strip() or None,
+                "campaignCount": num(r.get("참여 캠페인 수")) or 0,
+                "appearances": num(r.get("등장 횟수")) or 0,
+                "campaigns": camps[:CAMPAIGN_KEEP],
+                "campaignsMore": max(0, len(camps) - CAMPAIGN_KEEP),
+            })
+    out.sort(key=lambda c: (-c["campaignCount"], c["handle"]))
+    return out
+
+
 def main():
     campaigns, sheet_dash = parse_master()
     parts     = parse_participations()
+    creators  = parse_creators()
     issues    = quality(parts)
     linked, unlinked = link(campaigns, parts)
 
@@ -395,6 +476,8 @@ def main():
             "unlinkedTrackers": [{"title": t, "rows": n} for t, n in unlinked],
             "dataIssueCount": len(issues),
             "dataIssues": issues[:40],
+            "creatorCount": len(creators),
+            "creatorLinks": sum(c["campaignCount"] for c in creators),
         },
         "kpi": {
             "revenue": revenue,
@@ -420,6 +503,7 @@ def main():
         "brands": brands,
         "campaigns": campaigns,
         "participations": parts,
+        "creators": creators,
     }
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
@@ -429,6 +513,7 @@ def main():
     print(f"브랜드          {len(brands):>5}개")
     print(f"참여 레코드      {len(parts):>5}건  ({db['meta']['trackerCount']}개 진행시트 탭)")
     print(f"캠페인 연결      {len(linked):>5}/{db['meta']['trackerCount']} 탭")
+    print(f"협업 인플루언서  {len(creators):>5}명  (참여 연결 {db['meta']['creatorLinks']:,}건)")
     print(f"누적 매출       ₩{revenue:,}")
     print(f"누적 순이익     ₩{profit:,}   마진 {db['kpi']['margin']*100:.2f}%")
     print(f"미수금         ₩{revenue-paid:,}")

@@ -3,6 +3,12 @@
 # 배포에는 가명 처리된 prototype/data/db.json 만 올라간다.
 prototype/data/db.local.json
 
+# ── 운영 원본 ─────────────────────────────────────────
+# 거래처별 매출 · 순이익과 협업 인플루언서 명단이 그대로 든 원본.
+# 마이그레이션 입력일 뿐이라 레포에는 올리지 않는다.
+prototype/scripts/master.xlsx
+prototype/scripts/creators.csv
+
 # ── 의존성 · 빌드 산출물 ──────────────────────────────
 node_modules/
 .next/

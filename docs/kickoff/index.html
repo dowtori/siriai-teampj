@@ -376,9 +376,9 @@ footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
   <div class="facts">
     <div class="fact"><b>30<i>일</i></b><span>착수부터 실제 운영 전환까지</span></div>
     <div class="fact"><b>4<i>인</i></b><span>Claude Max 3 · Pro 1</span></div>
-    <div class="fact"><b>3<i>개</i></b><span>구축 화면</span></div>
+    <div class="fact"><b>4<i>개</i></b><span>구축 화면</span></div>
     <div class="fact"><b>20,347</b><span>옮겨올 인플루언서 명단</span></div>
-    <div class="fact"><b>66<i>건</i></b><span>옮겨올 캠페인 (26년 2–8월)</span></div>
+    <div class="fact"><b>138<i>건</i></b><span>옮겨올 캠페인 (26년 2–8월)</span></div>
   </div>
 </div>
 
@@ -389,7 +389,7 @@ footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
       <p class="eyebrow">SYSTEM STRUCTURE</p>
       <h2>시스템 구조</h2>
       <p class="lede">
-        하나의 데이터베이스를 어드민 · 브랜드 · 인플루언서 세 화면이 공유합니다.
+        하나의 데이터베이스를 어드민 · 브랜드 · 인플루언서 · 캠페인 지원 페이지 네 화면이 공유합니다.
         권한은 데이터베이스 계층에서 처리합니다.
       </p>
     </div>
@@ -400,27 +400,32 @@ footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
         <p>화면 · 서버 · 데이터 · 외부 연동</p>
       </div>
       <div class="panel-bd scroll">
-        <svg class="dia" viewBox="0 0 1080 520" role="img" aria-label="시스템 구조도: 어드민·브랜드·인플루언서 세 화면이 서버를 거쳐 데이터베이스로 연결되고, 하단에 외부 연동이 붙는다">
+        <svg class="dia" viewBox="0 0 1080 520" role="img" aria-label="시스템 구조도: 어드민·브랜드·인플루언서·캠페인 지원 페이지 네 화면이 서버를 거쳐 데이터베이스로 연결되고, 하단에 외부 연동이 붙는다">
 
           <!-- surfaces -->
-          <rect class="bx-a" x="30" y="24" width="300" height="96" rx="9"/>
+          <rect class="bx-a" x="30" y="24" width="232" height="96" rx="9"/>
           <text class="ta" x="52" y="52">ADMIN · INTERNAL</text>
           <text class="tt" x="52" y="79">어드민</text>
-          <text class="tm" x="52" y="101">전체 운영 · 세일즈 · 정산 · 설정</text>
+          <text class="tm" x="52" y="101">운영 · 세일즈 · 정산</text>
 
-          <rect class="bx-b" x="390" y="24" width="300" height="96" rx="9"/>
-          <text class="tb" x="412" y="52">BRAND · CLIENT</text>
-          <text class="tt" x="412" y="79">브랜드</text>
-          <text class="tm" x="412" y="101">캠페인 현황 · 리포트 · 광고 랜딩</text>
+          <rect class="bx-b" x="292" y="24" width="232" height="96" rx="9"/>
+          <text class="tb" x="314" y="52">BRAND · CLIENT</text>
+          <text class="tt" x="314" y="79">브랜드</text>
+          <text class="tm" x="314" y="101">인원 컨펌 · 현황 · 리포트</text>
 
-          <rect class="bx-i" x="750" y="24" width="300" height="96" rx="9"/>
-          <text class="ti" x="772" y="52">CREATOR</text>
-          <text class="tt" x="772" y="79">인플루언서</text>
-          <text class="tm" x="772" y="101">내 캠페인 · 지원 · 정산자료 제출</text>
+          <rect class="bx-i" x="554" y="24" width="232" height="96" rx="9"/>
+          <text class="ti" x="576" y="52">CREATOR</text>
+          <text class="tt" x="576" y="79">인플루언서</text>
+          <text class="tm" x="576" y="101">내 캠페인 · 정산자료</text>
+
+          <rect class="bx" x="816" y="24" width="232" height="96" rx="9"/>
+          <text class="ts" x="838" y="52">APPLY · PUBLIC</text>
+          <text class="tt" x="838" y="79">지원 페이지</text>
+          <text class="tm" x="838" y="101">캠페인별 공개 지원</text>
 
           <!-- surface → bus -->
-          <path class="ln" d="M180 120 V152 M540 120 V152 M900 120 V152"/>
-          <path class="ln" d="M180 152 H900"/>
+          <path class="ln" d="M146 120 V152 M408 120 V152 M670 120 V152 M932 120 V152"/>
+          <path class="ln" d="M146 152 H932"/>
           <path class="ln-a" d="M540 152 V196"/>
 
           <!-- api band -->
@@ -447,7 +452,7 @@ footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
           <text class="tm" x="314" y="475">파일 스토리지</text>
 
           <rect class="bx" x="554" y="444" width="234" height="52" rx="7"/>
-          <text class="tm" x="576" y="475">NoxInfluencer raw</text>
+          <text class="tm" x="576" y="475">인플루언서 로우데이터</text>
 
           <rect class="bx" x="816" y="444" width="234" height="52" rx="7"/>
           <text class="tm" x="838" y="475">세금계산서 · 회계</text>
@@ -486,7 +491,7 @@ footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
           <text class="tm" x="258" y="180" style="font-size:11px;fill:var(--ink-3)">정산자료 · 콘텐츠 보관</text>
 
           <rect class="bx" x="438" y="134" width="184" height="60" rx="7"/>
-          <text class="tm" x="456" y="160">NoxInfluencer</text>
+          <text class="tm" x="456" y="160">인플루언서 로우데이터</text>
           <text class="tm" x="456" y="180" style="font-size:11px;fill:var(--ink-3)">소싱 · 20,347건</text>
 
           <path class="ln-a" d="M652 116 H726" marker-end="url(#ah)"/>
@@ -617,18 +622,19 @@ footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
         <div class="ia-col">
           <div class="ia-t"><span class="dot"></span>홈</div>
           <ul>
-            <li>오늘 할 일</li>
-            <li>마감 임박 캠페인</li>
-            <li>알림 · 승인 대기</li>
+            <li>매출 · 순이익 · 마진율</li>
+            <li>캠페인 수 · 협업 계정 수</li>
+            <li>거래처별 · 월별 추이</li>
+            <li>최근 계산서</li>
           </ul>
         </div>
         <div class="ia-col">
           <div class="ia-t"><span class="dot"></span>대시보드</div>
           <ul>
-            <li>매출 · 순이익 · 마진율</li>
-            <li>업로드율 · 컨펌율</li>
+            <li>마감 임박</li>
+            <li>콘텐츠 리마인드</li>
+            <li>검수</li>
             <li>미수금 · 입금 현황</li>
-            <li>거래처별 · 월별 추이</li>
           </ul>
         </div>
         <div class="ia-col">
@@ -1015,7 +1021,7 @@ footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
             <div class="trk"><span>GOAL</span><b>주차 목표</b></div>
             <div><span class="flag"></span>데이터 구조 확정 · 1차 옮기기 완료</div>
             <div><span class="flag"></span>어드민 내부 시험판</div>
-            <div><span class="flag"></span>세 화면 연결 완료</div>
+            <div><span class="flag"></span>네 화면 연결 완료</div>
             <div><span class="flag"></span>실제 운영 시작</div>
           </div>
         </div>
@@ -1042,7 +1048,7 @@ footer{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:20px}
       <div class="dec-c">
         <div class="top-l"><span class="pill block">BLOCKING</span></div>
         <ol>
-          <li><b>캠페인 진행 단계 정의</b> — 시트에는 종료 · 상시 두 가지만 실제로 쓰이고 있습니다. 중간 단계를 어떻게 나눌지가 캠페인 보드의 칸이 됩니다.</li>
+          <li><b>캠페인 진행 단계 확정</b> — 시트에는 종료 · 상시 두 가지만 실제로 쓰이고 있어, 프로토타입은 모집 → 컨펌 → 업로드 중 → 업로드 완료 → 계산서 발행 → 정산 완료 6단계를 입금상태 · 계산서일에서 역산해 쓰고 있습니다. 지금은 브랜드 6단계 · 어드민 보드 5레인 · 인플루언서 4단계로 축이 셋으로 갈라져 있습니다. 이 6단계를 확정하고 세 화면의 축을 하나로 합치는 것이 결정 대상입니다.</li>
           <li><b>시트 전환 방식</b> — 완전히 옮기기 / 시트는 보기 전용으로 남기기 / 양쪽 계속 맞추기. 양쪽을 계속 맞추는 건 30일 안에 불가능합니다.</li>
           <li><b>정산 범위</b> — 계산서 발급까지 시스템이 하는지, 발급일과 금액만 기록하는지.</li>
           <li><b>인플루언서 정산자료</b> — 주민등록번호 · 통장사본을 시스템이 받는지. 받으면 원천징수 로직과 암호화 저장이 범위에 들어옵니다.</li>
