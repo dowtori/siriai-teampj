@@ -48,7 +48,8 @@ export default function Act({
   confirmLabel?: string
   doneTitle?: string
   doneNote?: ReactNode
-  onDone?: () => void
+  /** 입력한 값을 그대로 넘긴다. 채우지 않은 칸은 기본값이 들어간다. */
+  onDone?: (values: Record<string, string>) => void
   children?: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -61,7 +62,9 @@ export default function Act({
   const run = () => {
     setSent(true)
     mark()
-    onDone?.()
+    const out: Record<string, string> = {}
+    for (const f of fields ?? []) out[f.name] = (vals[f.name] ?? f.value ?? '').trim()
+    onDone?.(out)
   }
 
   const close = () => { setOpen(false); setTimeout(() => setSent(false), 250) }

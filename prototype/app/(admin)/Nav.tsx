@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -44,8 +45,31 @@ function isOn(path: string, href: string) {
   return EXACT.includes(href) ? path === href : path.startsWith(href)
 }
 
-export default function Nav() {
+export default function Nav({ badges = {} }: { badges?: Record<string, number> }) {
   const path = usePathname()
+
+  /* 한 번 들어가 본 탭은 표시를 지운다. 새로 생기면 다시 붙는다. */
+  const [seen, setSeen] = useState<Record<string, true>>({})
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('nav:seen')
+      if (raw) setSeen(JSON.parse(raw) as Record<string, true>)
+    } catch { /* 무시 */ }
+  }, [])
+  useEffect(() => {
+    setSeen((s) => {
+      if (s[path]) return s
+      const next = { ...s, [path]: true as const }
+      try { sessionStorage.setItem('nav:seen', JSON.stringify(next)) } catch { /* 무시 */ }
+      return next
+    })
+  }, [path])
+
+  const badge = (href: string) => {
+    const n = badges[href] ?? 0
+    if (!n || seen[href]) return null
+    return <span className="nb">{n > 99 ? '99+' : n}</span>
+  }
 
   const row = (g: Group) => {
     if (!g.items) {
@@ -53,17 +77,24 @@ export default function Nav() {
         <Link key={g.label} href={g.href!} className={`top ${isOn(path, g.href!) ? 'on' : ''}`}>
           <span className="d" />
           {g.label}
+          {badge(g.href!)}
         </Link>
       )
     }
     const open = g.items.some((i) => isOn(path, i.href))
+    // 접힌 그룹은 하위 표시를 모아서 머리에 붙인다
+    const sum = g.items.reduce((n, i) => n + (seen[i.href] ? 0 : (badges[i.href] ?? 0)), 0)
     return (
       <div className="grp" key={g.label}>
-        <p className={`gh ${open ? 'on' : ''}`}>{g.label}</p>
+        <p className={`gh ${open ? 'on' : ''}`}>
+          {g.label}
+          {sum > 0 && <span className="nb soft">{sum > 99 ? '99+' : sum}</span>}
+        </p>
         <div className="sub">
           {g.items.map((i) => (
             <Link key={i.label} href={i.href} className={isOn(path, i.href) ? 'on' : undefined}>
               {i.label}
+              {badge(i.href)}
             </Link>
           ))}
         </div>
@@ -88,6 +119,7 @@ export default function Nav() {
           <Link href="/b" className="top" style={{ fontWeight: 500 }}>
             <span className="d" />
             브랜드 페이지
+            {badge('/b')}
           </Link>
           <Link href="/c" className="top" style={{ fontWeight: 500 }}>
             <span className="d" />

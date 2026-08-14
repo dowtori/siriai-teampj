@@ -752,3 +752,19 @@
 }
 .gate-demo a:hover{background:var(--card-2)}
 .gate-demo a small{margin-left:auto;font-family:var(--lt);font-size:11px;font-weight:500;color:var(--ink-3);letter-spacing:.1em}
+
+/* ═══ 아직 안 본 것 표시 ═══
+   브랜드가 마지막으로 열어본 뒤에 생긴 것. 열면 사라진다. */
+.nnew{
+  flex:none;min-width:17px;height:17px;padding:0 5px;border-radius:100px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--lt);font-size:9.5px;font-weight:700;letter-spacing:-.01em;
+  background:var(--act,#a75f42);color:#fff;font-variant-numeric:tabular-nums;
+}
+.nnew.sm{min-width:15px;height:15px;font-size:9px}
+.ndot{
+  width:6px;height:6px;border-radius:50%;flex:none;margin-right:7px;
+  background:var(--act,#a75f42);display:inline-block;vertical-align:middle;
+}
+.brail .stg-i{display:flex;align-items:center}
+.brail .stg-h{display:flex;align-items:center;gap:7px}

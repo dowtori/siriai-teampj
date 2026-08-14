@@ -68,7 +68,11 @@ export default function Recruit() {
           <h2>지원 페이지</h2>
           <p>어드민에서 만들고, 조건에 맞는 인플루언서에게만 노출합니다</p>
         </div>
-        <PageBuilder pool={pool2} campaign="오드타입 26년 9월 1주차" />
+        <PageBuilder
+          pool={pool2}
+          campaign="오드타입 26년 9월 1주차"
+          brands={db.brands.map((b) => b.name)}
+        />
       </div>
 
       <div className="zone">

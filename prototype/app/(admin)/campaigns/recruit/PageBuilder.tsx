@@ -33,7 +33,14 @@ const HIST = [
 
 const PLATS = ['전체', '인스타그램', '틱톡', '유튜브', '네이버블로그'] as const
 
-export default function PageBuilder({ pool, campaign }: { pool: Pool[]; campaign: string }) {
+export default function PageBuilder({ pool, campaign, brands }: {
+  pool: Pool[]
+  campaign: string
+  /** 이미 등록된 거래처. 없으면 이 자리에서 새로 만든다. */
+  brands: string[]
+}) {
+  const [brand, setBrand] = useState<string>(brands[0] ?? '')
+  const [added, setAdded] = useState<string[]>([])
   const [tier, setTier] = useState<string>('all')
   const [hist, setHist] = useState<string>('repeat')
   const [plat, setPlat] = useState<string>('인스타그램')
@@ -90,6 +97,42 @@ export default function PageBuilder({ pool, campaign }: { pool: Pool[]; campaign
             </p>
           </div>
 
+          <div className="frow" style={{ paddingBottom: 18, borderBottom: '1px solid var(--line-2)' }}>
+            <div className="fl">
+              <b>거래처</b>
+              <span>이 캠페인이 어느 고객사 건인지</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <select
+                className="btn"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                style={{ padding: '9px 13px', fontSize: 13, minWidth: 200 }}
+              >
+                {[...brands, ...added].map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+              <Act
+                id="rc-brand-new" variant="btn" label="+ 거래처 추가" doneLabel="거래처 추가됨"
+                eyebrow="CLIENT" title="거래처 추가"
+                intro={<><b>목록에 없는 거래처를 새로 만듭니다</b>여기서 만든 거래처는 세일즈 · 정산에서도 그대로 씁니다.</>}
+                fields={[
+                  { name: 'name', label: '거래처명', placeholder: '사업자등록증 상호 그대로', required: true },
+                  { name: 'mgr', label: '담당자', placeholder: '이름 · 직함' },
+                  { name: 'mail', label: '이메일', placeholder: '세금계산서 받을 주소' },
+                ]}
+                confirmLabel="추가하기"
+                doneTitle="거래처를 추가했습니다"
+                doneNote="브랜드 페이지 접근 코드도 함께 발급됩니다."
+                onDone={(v) => {
+                  const nm = (v.name ?? '').trim()
+                  if (!nm) return
+                  setAdded((a) => (a.includes(nm) ? a : [...a, nm]))
+                  setBrand(nm)
+                }}
+              />
+            </div>
+          </div>
+
           <div>
             <span className="ap-only-k" style={{ color: 'var(--ink-3)' }}>참여 조건</span>
             <div className="form" style={{ marginTop: 14, gap: 16 }}>
@@ -144,6 +187,7 @@ export default function PageBuilder({ pool, campaign }: { pool: Pool[]; campaign
               eyebrow="PAGE" title="지원 페이지 만들기"
               intro={<><b>{campaign}</b>커버 · 제공 제품 · 가이드라인 · 프로세스가 들어간 페이지를 만듭니다. 캠페인마다 따로 배포할 필요가 없습니다.</>}
               fields={[
+                { name: 'brand', label: '거래처', value: brand, required: true },
                 { name: 'title', label: '페이지 제목', value: campaign, required: true },
                 { name: 'due', label: '모집 마감', placeholder: '2026-09-05' },
                 { name: 'n', label: '모집 인원', placeholder: '예: 30' },

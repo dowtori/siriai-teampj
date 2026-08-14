@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
 /* 브랜드 페이지 좌측.
@@ -66,6 +66,30 @@ export default function BrandNav({
   const inGroup = (g: Group) => campaigns.filter((c) => g.stages.includes(c.stageKey))
   const byStage = (s: string) => campaigns.filter((c) => c.stageKey === s)
 
+  /* 아직 열어보지 않은 캠페인에 표시를 붙인다. 한 번 열면 사라진다. */
+  const [seen, setSeen] = useState<Record<string, true>>({})
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('bseen:' + code)
+      if (raw) setSeen(JSON.parse(raw) as Record<string, true>)
+    } catch { /* 무시 */ }
+  }, [code])
+  useEffect(() => {
+    if (!cur) return
+    setSeen((s) => {
+      if (s[cur]) return s
+      const next = { ...s, [cur]: true as const }
+      try { sessionStorage.setItem('bseen:' + code, JSON.stringify(next)) } catch { /* 무시 */ }
+      return next
+    })
+  }, [cur, code])
+
+  /* 마감된 캠페인은 새 표시를 붙이지 않는다.
+     이미 끝난 35건에 표시가 붙으면 정작 봐야 할 것이 묻힌다. */
+  const LIVE = ['recruit', 'confirm', 'posting', 'posted']
+  const isNew = (c: NavCampaign) => !seen[c.id] && LIVE.includes(c.stageKey)
+  const newIn = (rows: NavCampaign[]) => rows.filter(isNew).length
+
   return (
     <aside className="brail">
       <div className="bh">
@@ -91,6 +115,7 @@ export default function BrandNav({
             >
               <span className={`car ${isOpen ? 'open' : ''}`} />
               {g.title}
+              {newIn(rows) > 0 && <span className="nnew">{newIn(rows)}</span>}
               <span className={`n ${g.tone === 'act' && rows.length > 0 ? 'badge' : ''}`}>{rows.length}</span>
             </button>
 
@@ -108,6 +133,7 @@ export default function BrandNav({
                         className={`stg-h ${curStage === s ? 'on' : ''}`}
                       >
                         {STAGE_LABEL[s]}
+                        {newIn(list) > 0 && <span className="nnew sm">{newIn(list)}</span>}
                         <span className="sn2">{list.length}</span>
                       </Link>
                       {list.map((c) => (
@@ -116,6 +142,7 @@ export default function BrandNav({
                           href={`/b/${code}?c=${c.id}`}
                           className={`stg-i ${cur === c.id ? 'on' : ''}`}
                         >
+                          {isNew(c) && <span className="ndot" aria-label="아직 안 봄" />}
                           {c.name}
                         </Link>
                       ))}
