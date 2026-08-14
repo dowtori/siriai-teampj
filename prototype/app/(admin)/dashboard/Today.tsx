@@ -31,9 +31,17 @@ export default function Today({ work, asOf }: { work: Work[]; asOf: string }) {
   const [pick, setPick] = useState<Kind>('due')
   const [limit, setLimit] = useState(8)
   const [bulk, setBulk] = useState<Kind | null>(null)
+  /* 처리한 일감. 여기서 바로 켜고 끈다 — 페이지를 옮기지 않는다. */
+  const [done, setDone] = useState<Record<string, boolean>>({})
+  const [hideDone, setHideDone] = useState(false)
+
+  const flip = (id: string) => setDone((d) => ({ ...d, [id]: !d[id] }))
+  const left = (k: Kind) => work.filter((w) => w.kind === k && !done[w.id]).length
 
   const count = (k: Kind) => work.filter((w) => w.kind === k).length
-  const rows = work.filter((w) => w.kind === pick)
+  const all = work.filter((w) => w.kind === pick)
+  const rows = hideDone ? all.filter((w) => !done[w.id]) : all
+  const doneHere = all.filter((w) => done[w.id]).length
   const tile = TILES.find((t) => t.kind === pick)!
 
   return (
@@ -58,7 +66,7 @@ export default function Today({ work, asOf }: { work: Work[]; asOf: string }) {
                 <span className="ic">{t.icon}</span>
                 <span className="go">클릭하여 바로 처리 ↓</span>
               </div>
-              <span className="tv">{count(t.kind)}</span>
+              <span className="tv">{left(t.kind)}</span>
               <span className="tl">{t.label}</span>
               <span className="ts">{t.hint}</span>
             </button>
@@ -68,41 +76,54 @@ export default function Today({ work, asOf }: { work: Work[]; asOf: string }) {
         <div className="panel">
           <div className="zh" style={{ padding: '16px 20px 14px', borderBottom: '1px solid var(--line-2)' }}>
             <h2 style={{ fontSize: 16 }}>{tile.label}</h2>
-            <p>{rows.length}건</p>
-            <div className="right">
-              <button className="btn" onClick={() => setBulk(pick)} disabled={rows.length === 0}>
+            <p>{all.length - doneHere}건 남음{doneHere > 0 && ` · ${doneHere}건 처리함`}</p>
+            <div className="right" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {doneHere > 0 && (
+                <button className="btn" onClick={() => setHideDone((v) => !v)}>
+                  {hideDone ? '처리한 것도 보기' : '처리한 것 숨기기'}
+                </button>
+              )}
+              <button className="btn" onClick={() => setBulk(pick)} disabled={all.length === 0}>
                 한 번에 처리
               </button>
             </div>
           </div>
 
+          {/* 체크로 완료·취소한다. 페이지를 옮기는 건 '자세히' 버튼일 때만. */}
           <div className="rows">
-            {rows.slice(0, limit).map((w) => {
-              const body = (
-                <>
-                  <span className={`dot ${w.urgent ? 'issue' : 'live'}`} />
-                  <span className="lead">
-                    <span className="t">{w.title}</span>
-                    <span className="s">{w.sub}</span>
+            {rows.slice(0, limit).map((w) => (
+              <div className={`row task ${done[w.id] ? 'is-done' : ''}`} key={w.id}>
+                <button
+                  className={`tick ${done[w.id] ? 'on' : ''}`}
+                  onClick={() => flip(w.id)}
+                  aria-pressed={!!done[w.id]}
+                  aria-label={done[w.id] ? '처리 취소' : '처리 완료'}
+                  title={done[w.id] ? '누르면 다시 할 일로' : '누르면 처리 완료'}
+                >
+                  ✓
+                </button>
+                <span className="lead">
+                  <span className="t">{w.title}</span>
+                  <span className="s">{w.sub}</span>
+                </span>
+                <span className="tail">
+                  <span className="met">
+                    <b>{w.metaValue}</b>
+                    <span>{w.metaLabel}</span>
                   </span>
-                  <span className="tail">
-                    <span className="met">
-                      <b>{w.metaValue}</b>
-                      <span>{w.metaLabel}</span>
-                    </span>
-                    <span className="arrow">→</span>
-                  </span>
-                </>
-              )
-              return w.href ? (
-                <Link className="row" key={w.id} href={w.href}>{body}</Link>
-              ) : (
-                <div className="row" key={w.id} style={{ cursor: 'default' }}>{body}</div>
-              )
-            })}
+                  {w.href && (
+                    <Link className="btn ghost" href={w.href} onClick={(e) => e.stopPropagation()}>
+                      자세히 →
+                    </Link>
+                  )}
+                </span>
+              </div>
+            ))}
             {rows.length === 0 && (
               <div style={{ padding: 34, color: 'var(--ink-3)', fontSize: 14 }}>
-                {tile.label}에 남은 일이 없습니다.
+                {all.length === 0
+                  ? `${tile.label}에 남은 일이 없습니다.`
+                  : `${tile.label} ${all.length}건을 모두 처리했습니다.`}
               </div>
             )}
           </div>

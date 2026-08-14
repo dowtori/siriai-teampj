@@ -1,8 +1,9 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Drawer, Modal } from '@/app/ui/Overlay'
+import Thread from './Thread'
 
 export type CardVM = {
   id: string
@@ -228,6 +229,8 @@ export default function CampaignsView({ cards }: { cards: CardVM[] }) {
                 </dd>
               </dl>
             </div>
+
+            <Thread campaignId={open.id} campaignName={open.name} />
           </>
         )}
       </Drawer>
@@ -267,19 +270,35 @@ export default function CampaignsView({ cards }: { cards: CardVM[] }) {
   )
 }
 
+/* 체크는 눌러서 켜고 끌 수 있다. 데이터에서 나온 값이 처음 상태가 되고,
+   그 뒤로는 사람이 만지는 대로 따라간다. */
 function Step({ title, n, items }: { title: string; n: string; items: [string, boolean][] }) {
+  const seed = items.map(([, v]) => v).join(',')
+  const [on, setOn] = useState<boolean[]>(() => items.map(([, v]) => v))
+  useEffect(() => { setOn(items.map(([, v]) => v)) }, [seed])   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const flip = (i: number) => setOn((s) => s.map((v, j) => (j === i ? !v : v)))
+  const done = on.filter(Boolean).length
+
   return (
     <div className="step">
       <div className="sh">
         <b>{title}</b>
-        <span className="n">{n}</span>
+        {/* n 이 또 다른 x/y 면 같은 말이 두 번 나온다. 그럴 땐 체크 진행만 보여준다. */}
+        <span className="n">{done}/{items.length}{n && !/^\d+\/\d+$/.test(n) ? ` · ${n}` : ''}</span>
       </div>
       <div className="checks">
-        {items.map(([label, on]) => (
-          <span className={`check ${on ? 'on' : ''}`} key={label}>
+        {items.map(([label], i) => (
+          <button
+            type="button"
+            className={`check ${on[i] ? 'on' : ''}`}
+            key={label}
+            onClick={() => flip(i)}
+            aria-pressed={on[i]}
+          >
             <i>✓</i>
             {label}
-          </span>
+          </button>
         ))}
       </div>
     </div>

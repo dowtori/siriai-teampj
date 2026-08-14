@@ -375,7 +375,12 @@ button{font:inherit;color:inherit}
 .step .sh b{font-size:13.5px;font-weight:700;letter-spacing:-.02em}
 .step .sh .n{margin-left:auto;font-family:var(--lt);font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .checks{display:flex;flex-direction:column;gap:7px}
-.check{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2);letter-spacing:-.01em}
+/* 눌러서 켜고 끈다 — 보기 전용이 아니다 */
+.check{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2);letter-spacing:-.01em;
+  appearance:none;background:transparent;border:0;padding:3px 0;font-family:inherit;text-align:left;
+  cursor:pointer;width:100%;border-radius:6px;transition:color .14s var(--ease)}
+.check:hover{color:var(--ink)}
+.check:hover i{border-color:var(--ink-3)}
 .check i{
   width:15px;height:15px;border-radius:5px;border:1.5px solid var(--line-3);flex:none;
   display:grid;place-items:center;font-style:normal;font-size:9px;color:transparent;
@@ -524,4 +529,87 @@ td small{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
   .navg{flex-direction:row;flex-wrap:wrap}
   .grp,.rail-foot,.legend{display:none}
   .trio{grid-template-columns:1fr}
+}
+
+/* ═══ 오늘 할 일 — 인라인 완료 처리 ═══
+   체크로 끝내고, 페이지를 옮기는 건 '자세히' 버튼일 때만. */
+.row.task{cursor:default}
+.row.task .tick{
+  width:24px;height:24px;flex:none;border-radius:8px;border:1.6px solid var(--line-3);
+  background:transparent;color:transparent;font-size:12px;font-weight:700;line-height:1;
+  display:grid;place-items:center;cursor:pointer;
+  transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease);
+}
+.row.task .tick:hover{border-color:var(--ok);color:var(--line-3)}
+.row.task .tick.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.row.task.is-done .lead .t{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--line-3)}
+.row.task.is-done .lead .s,.row.task.is-done .met{opacity:.5}
+.btn.ghost{padding:7px 12px;font-size:12.5px;background:transparent;border-color:var(--line-2);color:var(--ink-3)}
+.btn.ghost:hover{background:var(--card-2);color:var(--ink);border-color:var(--line)}
+
+/* ═══ 캠페인 메모 · 업무 추적 ═══
+   슬랙에서 하던 대화를 캠페인에 붙인다. */
+.sect h4 .thr-open{
+  margin-left:9px;padding:2px 8px;border-radius:100px;font-family:var(--lt);
+  font-size:10px;font-weight:600;letter-spacing:.02em;
+  background:var(--warn-soft,rgba(158,59,48,.09));color:var(--warn,#9e3b30);
+}
+.thr{display:flex;flex-direction:column;gap:2px;max-height:340px;overflow-y:auto;
+  border:1px solid var(--line);border-radius:11px;padding:6px;background:var(--card-2)}
+.thr-empty{margin:0;padding:22px;font-size:13px;color:var(--ink-3);text-align:center}
+.msg{display:flex;gap:11px;padding:10px 10px 11px;border-radius:9px;transition:background .14s var(--ease)}
+.msg:hover{background:var(--card)}
+.msg-av{
+  width:27px;height:27px;flex:none;border-radius:8px;display:grid;place-items:center;
+  background:var(--accent-soft);color:var(--accent-ink,var(--accent));
+  font-size:11.5px;font-weight:700;letter-spacing:-.02em;
+}
+.msg-b{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.msg-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.msg-h b{font-size:13px;font-weight:600;letter-spacing:-.016em}
+.msg-h .t{font-size:11px;color:var(--ink-3);font-family:var(--lt)}
+.msg-b p{margin:0;font-size:13.5px;line-height:1.55;color:var(--ink-2);letter-spacing:-.008em;
+  word-break:keep-all;overflow-wrap:anywhere}
+.msg .mention{color:var(--accent-ink,var(--accent));font-weight:600;
+  background:var(--accent-soft);border-radius:4px;padding:0 3px}
+.tagc{
+  font-size:10.5px;font-weight:600;letter-spacing:-.006em;padding:2px 7px;border-radius:100px;
+  background:var(--line-2);color:var(--ink-3);
+}
+.msg.is-todo .msg-av{background:var(--warn-soft,rgba(158,59,48,.09));color:var(--warn,#9e3b30)}
+.msg .todo{
+  align-self:flex-start;margin-top:5px;display:flex;align-items:center;gap:7px;
+  padding:5px 11px 5px 8px;border-radius:100px;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);
+  font-size:11.5px;font-weight:600;color:var(--ink-3);font-family:inherit;
+}
+.msg .todo i{width:14px;height:14px;border-radius:5px;border:1.4px solid var(--line-3);
+  display:grid;place-items:center;font-style:normal;font-size:8px;color:transparent}
+.msg .todo:hover{border-color:var(--line-3);color:var(--ink-2)}
+.msg .todo.on{background:var(--ok-soft,rgba(58,122,88,.1));border-color:transparent;color:var(--ok)}
+.msg .todo.on i{background:var(--ok);border-color:var(--ok);color:#fff}
+.msg.is-done .msg-b p{color:var(--ink-3)}
+
+.thr-form{margin-top:10px;border:1px solid var(--line);border-radius:11px;background:var(--card);overflow:hidden}
+.thr-form textarea{
+  width:100%;border:0;resize:vertical;padding:12px 14px;background:transparent;
+  font-family:inherit;font-size:13.5px;line-height:1.55;color:var(--ink);letter-spacing:-.008em;
+}
+.thr-form textarea:focus{outline:0}
+.thr-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:9px 10px;border-top:1px solid var(--line-2);background:var(--card-2)}
+.thr-at,.thr-tags{display:flex;gap:4px;flex-wrap:wrap}
+.thr-at button,.thr-tags button{
+  border:1px solid var(--line);background:var(--card);border-radius:100px;padding:4px 9px;
+  font-family:inherit;font-size:11.5px;color:var(--ink-3);cursor:pointer;
+  transition:background .14s var(--ease),color .14s var(--ease),border-color .14s var(--ease);
+}
+.thr-at button:hover,.thr-tags button:hover{color:var(--ink);border-color:var(--line-3)}
+.thr-tags button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.thr-todo{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-3);cursor:pointer}
+.thr-tools .btn{margin-left:auto;padding:7px 14px;font-size:12.5px}
+.thr-tools .btn:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:560px){
+  .thr-tools{gap:6px}
+  .thr-tools .btn{margin-left:0;width:100%}
 }
