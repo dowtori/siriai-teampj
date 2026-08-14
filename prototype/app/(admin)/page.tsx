@@ -106,8 +106,11 @@ export default function Home() {
               {byMonth.map((m) => (
                 <div className="mo" key={m.month}>
                   <span className="vl">{Math.round(m.revenue / 1_000_000)}M</span>
-                  <div className="col2" style={{ height: `${Math.max((m.revenue / maxRev) * 100, 3)}%` }}>
-                    <i style={{ height: `${(m.profit / Math.max(m.revenue, 1)) * 100}%` }} />
+                  {/* 막대는 자기 트랙 안에서만 자란다. 가장 큰 달이어도 위 숫자를 밀어내지 않는다. */}
+                  <div className="track">
+                    <div className="col2" style={{ height: `${Math.max((m.revenue / maxRev) * 100, 3)}%` }}>
+                      <i style={{ height: `${(m.profit / Math.max(m.revenue, 1)) * 100}%` }} />
+                    </div>
                   </div>
                   <span className="lb">{m.month.slice(2)}</span>
                 </div>
