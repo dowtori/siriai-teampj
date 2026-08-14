@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Act from '@/app/ui/Act'
+import { STATUS_LABEL, type Status } from '@/lib/avail-types'
 
 /* 지원 페이지를 어드민에서 만들고, 조건에 맞는 인플루언서에게만 노출한다.
    조건을 바꾸면 대상 인원이 바로 바뀐다. */
@@ -14,6 +15,10 @@ export type Pool = {
   followers: number | null
   worked: number
   region: string | null
+  /** 지금 붙일 수 있는가 — 진행 중 · 쿨다운이면 제안이 안 나간다 */
+  status: Status
+  why: string
+  recentBrands: string[]
 }
 
 const TIERS = [
@@ -40,6 +45,9 @@ export default function PageBuilder({ pool, campaign, brands }: {
   brands: string[]
 }) {
   const [brand, setBrand] = useState<string>(brands[0] ?? '')
+  /* 일정과 경합 — 5,818명에서 지금 제안 가능한 사람만 남기는 두 조건 */
+  const [freeOnly, setFreeOnly] = useState(true)
+  const [noRival, setNoRival] = useState(true)
   const [added, setAdded] = useState<string[]>([])
   const [tier, setTier] = useState<string>('all')
   const [hist, setHist] = useState<string>('repeat')
@@ -59,9 +67,17 @@ export default function PageBuilder({ pool, campaign, brands }: {
       if (hist === 'regular' && p.worked < 6) return false
       if (plat !== '전체' && p.platform !== plat) return false
       if (kr && p.region && p.region !== '한국') return false
+      // 진행 중이거나 쿨다운이면 지금 제안을 넣을 수 없다
+      if (freeOnly && p.status !== 'open') return false
+      // 이 거래처와 최근 90일 안에 이미 함께했으면 뺀다
+      if (noRival && p.recentBrands.includes(brand)) return false
       return true
     })
-  }, [pool, tier, hist, plat, kr])
+  }, [pool, tier, hist, plat, kr, freeOnly, noRival, brand])
+
+  const blocked = pool.filter((p) => p.status !== 'open')
+  const busy = blocked.filter((p) => p.status === 'busy').length
+  const cooling = blocked.length - busy
 
   // 많이 함께한 사람부터 보여준다
   const top = [...matched].sort((a, b) => b.worked - a.worked).slice(0, 6)
@@ -167,6 +183,26 @@ export default function PageBuilder({ pool, campaign, brands }: {
                 </div>
               </div>
               <div className="frow">
+                <div className="fl">
+                  <b>일정</b>
+                  <span>진행 중 {busy}명 · 쿨다운 {cooling}명은 지금 제안이 안 나갑니다</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button className={`toggle ${freeOnly ? 'on' : ''}`} onClick={() => setFreeOnly((v) => !v)} aria-label="지금 가능한 사람만" />
+                  <span style={{ fontSize: 13.5 }}>{freeOnly ? '지금 가능한 사람만' : '일정 상관없이'}</span>
+                </div>
+              </div>
+              <div className="frow">
+                <div className="fl">
+                  <b>거래처 경합</b>
+                  <span>최근 90일 안에 {brand}와 이미 함께한 사람은 뺍니다</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button className={`toggle ${noRival ? 'on' : ''}`} onClick={() => setNoRival((v) => !v)} aria-label="경합 제외" />
+                  <span style={{ fontSize: 13.5 }}>{noRival ? '겹치는 사람 제외' : '상관없이'}</span>
+                </div>
+              </div>
+              <div className="frow">
                 <div className="fl"><b>지역</b><span>국내 거주만 노출</span></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <button className={`toggle ${kr ? 'on' : ''}`} onClick={() => setKr((v) => !v)} aria-label="국내만" />
@@ -233,6 +269,9 @@ export default function PageBuilder({ pool, campaign, brands }: {
                 <span className="lead">
                   <span className="t" style={{ fontSize: 13.5 }}>{p.handle}</span>
                   <span className="s">
+                    {p.status !== 'open' && (
+                      <b style={{ color: 'var(--warn)' }}>{STATUS_LABEL[p.status]} · </b>
+                    )}
                     {p.platform} · 협업 {p.worked}회
                     {p.followers != null ? ` · ${p.followers.toLocaleString('ko-KR')} 팔로워` : ''}
                   </span>

@@ -2,8 +2,14 @@
 
 import { useMemo, useState } from 'react'
 import { Drawer } from '@/app/ui/Overlay'
+import { STATUS_LABEL, type Status } from '@/lib/avail-types'
 
 export type CreatorRow = {
+  /** 지금 제안을 넣을 수 있는가 */
+  status: Status
+  until: string | null
+  why: string
+  recentBrands: string[]
   key: string
   handle: string
   name: string
@@ -27,18 +33,19 @@ const cnt = (n: number | null) => (n == null ? '—' : n.toLocaleString('ko-KR')
 const won = (n: number | null) => (n == null ? '—' : '₩' + n.toLocaleString('ko-KR'))
 const at = (h: string) => '@' + h
 
-type Tab = 'regular' | 'repeat' | 'detailed' | 'all'
+type Tab = 'open' | 'regular' | 'repeat' | 'busy' | 'all'
 const TABS: { k: Tab; l: string; d: string }[] = [
+  { k: 'open', l: '지금 가능', d: '진행 중인 건도 쿨다운도 없음' },
   { k: 'regular', l: '단골', d: '여섯 번 이상' },
   { k: 'repeat', l: '재협업', d: '두 번 이상' },
-  { k: 'detailed', l: '상세 확보', d: '팔로워 · 단가 있음' },
+  { k: 'busy', l: '묶인 사람', d: '진행 중 · 쿨다운' },
   { k: 'all', l: '전체', d: '' },
 ]
 
 const PAGE = 12
 
 export default function Roster({ rows }: { rows: CreatorRow[] }) {
-  const [tab, setTab] = useState<Tab>('regular')
+  const [tab, setTab] = useState<Tab>('open')
   const [q, setQ] = useState('')
   const [plat, setPlat] = useState('전체')
   const [limit, setLimit] = useState(PAGE)
@@ -53,9 +60,10 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
   const list = useMemo(() => {
     const t = q.trim().toLowerCase().replace(/^@/, '')
     return rows.filter((r) =>
-      (tab === 'regular' ? r.worked >= 6
+      (tab === 'open' ? r.status === 'open'
+        : tab === 'regular' ? r.worked >= 6
         : tab === 'repeat' ? r.worked >= 2
-        : tab === 'detailed' ? r.detailed
+        : tab === 'busy' ? r.status !== 'open'
         : true)
       && (plat === '전체' || r.platform === plat)
       && (!t || r.handle.includes(t) || r.name.toLowerCase().includes(t)),
@@ -109,7 +117,7 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
               <th className="n" style={{ width: 92 }}>팔로워</th>
               <th className="n" style={{ width: 68 }}>ER</th>
               <th className="n" style={{ width: 104 }}>최근 단가</th>
-              <th style={{ width: 62 }}>상세</th>
+              <th style={{ width: 110 }}>일정</th>
             </tr>
           </thead>
           <tbody>
@@ -126,7 +134,11 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
                 <td className="n">{cnt(r.followers)}</td>
                 <td className="n">{r.er != null ? `${r.er.toFixed(1)}%` : '—'}</td>
                 <td className="n">{won(r.fee)}</td>
-                <td style={{ color: 'var(--ink-3)' }}>{r.detailed ? '있음' : '—'}</td>
+                <td>
+                  <span className={`chip st ${r.status === 'open' ? 'pass' : r.status === 'busy' ? 'fix' : 'wait'}`}>
+                    {STATUS_LABEL[r.status]}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -163,6 +175,19 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
               <div><span className="k">협업</span><span className="v">{open.worked}회</span></div>
               <div><span className="k">팔로워</span><span className="v">{cnt(open.followers)}</span></div>
               <div><span className="k">최근 단가</span><span className="v">{won(open.fee)}</span></div>
+            </div>
+
+            <div className="sect">
+              <h4>일정</h4>
+              <div className="note info">
+                <div>
+                  <b>{STATUS_LABEL[open.status]}</b>
+                  {open.why}
+                  {open.recentBrands.length > 0 && (
+                    <><br />최근 90일 함께한 거래처 — {open.recentBrands.join(' · ')}</>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="sect">

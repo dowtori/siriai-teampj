@@ -1,4 +1,5 @@
 import { getDb, cnt } from '@/lib/db'
+import { availability, counts, type Status } from '@/lib/availability'
 import Roster, { type CreatorRow } from './Roster'
 
 /* 인플루언서 명단 — 진행시트를 되짚어 만든 협업 이력이 기준이다.
@@ -41,9 +42,15 @@ export default function InfluencersPage() {
     detail.set(k, cur)
   }
 
+  const av = availability()
   const rows: CreatorRow[] = (db.creators ?? []).map((cr) => {
     const d = detail.get(cr.handle)
+    const a = av.get(cr.handle)
     return {
+      status: (a?.status ?? 'open') as Status,
+      until: a?.until ?? null,
+      why: a?.reason ?? '진행 중인 건이 없습니다',
+      recentBrands: a?.recentBrands ?? [],
       key: cr.id,
       handle: cr.handle,
       name: cr.name,
@@ -64,7 +71,7 @@ export default function InfluencersPage() {
 
   const repeat = rows.filter((r) => r.worked >= 2).length
   const regular = rows.filter((r) => r.worked >= 6).length
-  const detailed = rows.filter((r) => r.detailed).length
+  const c = counts()
 
   return (
     <div className="wrap">
@@ -95,9 +102,9 @@ export default function InfluencersPage() {
           <span className="sd">여섯 번 이상 — 단골</span>
         </div>
         <div className="score">
-          <span className="sk">DETAILED</span>
-          <span className="sv">{cnt(detailed)}</span>
-          <span className="sd">팔로워 · 단가까지 확보</span>
+          <span className="sk">AVAILABLE</span>
+          <span className="sv">{cnt(c.open)}</span>
+          <span className="sd">지금 제안 가능 · 진행 중 {c.busy} · 쿨다운 {c.cooling}</span>
         </div>
       </div>
 
