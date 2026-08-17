@@ -3,8 +3,11 @@
 import { useMemo, useState } from 'react'
 import { Drawer } from '@/app/ui/Overlay'
 import { STATUS_LABEL, type Status } from '@/lib/avail-types'
+import { CATEGORIES, type Category } from '@/lib/cat-types'
+import { useCore } from '../../Core'
 
 export type CreatorRow = {
+  cats: Category[]
   /** 지금 제안을 넣을 수 있는가 */
   status: Status
   until: string | null
@@ -33,8 +36,9 @@ const cnt = (n: number | null) => (n == null ? '—' : n.toLocaleString('ko-KR')
 const won = (n: number | null) => (n == null ? '—' : '₩' + n.toLocaleString('ko-KR'))
 const at = (h: string) => '@' + h
 
-type Tab = 'open' | 'regular' | 'repeat' | 'busy' | 'all'
+type Tab = 'core' | 'open' | 'regular' | 'repeat' | 'busy' | 'all'
 const TABS: { k: Tab; l: string; d: string }[] = [
+  { k: 'core', l: '핵심', d: '상시 데리고 가는 정예' },
   { k: 'open', l: '지금 가능', d: '진행 중인 건도 쿨다운도 없음' },
   { k: 'regular', l: '단골', d: '여섯 번 이상' },
   { k: 'repeat', l: '재협업', d: '두 번 이상' },
@@ -45,7 +49,9 @@ const TABS: { k: Tab; l: string; d: string }[] = [
 const PAGE = 12
 
 export default function Roster({ rows }: { rows: CreatorRow[] }) {
-  const [tab, setTab] = useState<Tab>('open')
+  const core = useCore()
+  const [tab, setTab] = useState<Tab>('core')
+  const [cat, setCat] = useState<Category | '전체'>('전체')
   const [q, setQ] = useState('')
   const [plat, setPlat] = useState('전체')
   const [limit, setLimit] = useState(PAGE)
@@ -59,16 +65,20 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
 
   const list = useMemo(() => {
     const t = q.trim().toLowerCase().replace(/^@/, '')
-    return rows.filter((r) =>
-      (tab === 'open' ? r.status === 'open'
+    const list = rows.filter((r) =>
+      (tab === 'core' ? core?.has(r.key)
+        : tab === 'open' ? r.status === 'open'
         : tab === 'regular' ? r.worked >= 6
         : tab === 'repeat' ? r.worked >= 2
         : tab === 'busy' ? r.status !== 'open'
         : true)
       && (plat === '전체' || r.platform === plat)
+      && (cat === '전체' || (cat === '기타' ? r.cats.length === 0 : r.cats.includes(cat)))
       && (!t || r.handle.includes(t) || r.name.toLowerCase().includes(t)),
     )
-  }, [rows, tab, plat, q])
+    // 핵심 인플루언서를 맨 위에 둔다
+    return [...list].sort((a, b) => Number(!!core?.has(b.key)) - Number(!!core?.has(a.key)))
+  }, [rows, tab, plat, q, cat, core])
 
   const reset = () => setLimit(PAGE)
 
@@ -87,7 +97,16 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
             </button>
           ))}
         </div>
-        <div className="right" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="right" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
+            className="btn"
+            value={cat}
+            onChange={(e) => { setCat(e.target.value as Category | '전체'); reset() }}
+            style={{ padding: '8px 12px', fontSize: 12.5 }}
+          >
+            <option value="전체">카테고리 전체</option>
+            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
           <select
             className="btn"
             value={plat}
@@ -112,7 +131,7 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
           <thead>
             <tr>
               <th>인플루언서</th>
-              <th style={{ width: 88 }}>플랫폼</th>
+              <th style={{ width: 140 }}>카테고리</th>
               <th className="n" style={{ width: 78 }}>협업</th>
               <th className="n" style={{ width: 92 }}>팔로워</th>
               <th className="n" style={{ width: 68 }}>ER</th>
@@ -124,10 +143,17 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
             {list.slice(0, limit).map((r) => (
               <tr key={r.key} onClick={() => setOpen(r)} style={{ cursor: 'pointer' }}>
                 <td>
-                  <span className="hl2">{at(r.handle)}</span>
-                  {r.brands.length > 0 && <small>{r.brands.slice(0, 2).join(' · ')}</small>}
+                  <span className="hl2">
+                    {core?.has(r.key) && <span className="corestar" title="핵심 인플루언서">★</span>}
+                    {at(r.handle)}
+                  </span>
+                  <small>{r.platform}{r.brands.length > 0 ? ` · ${r.brands.slice(0, 2).join(' · ')}` : ''}</small>
                 </td>
-                <td>{r.platform}</td>
+                <td>
+                  {r.cats.length === 0
+                    ? <span className="ccat none">미분류</span>
+                    : r.cats.map((c) => <span className="ccat" key={c}>{c}</span>)}
+                </td>
                 <td className="n">
                   <b style={{ color: r.worked >= 6 ? 'var(--accent)' : 'inherit' }}>{r.worked}</b>회
                 </td>
@@ -147,6 +173,11 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
           <div style={{ padding: 34, color: 'var(--ink-3)', fontSize: 14 }}>조건에 맞는 계정이 없습니다.</div>
         )}
       </div>
+
+      <p className="idx-note">
+        인덱싱은 여기서 더 늘어납니다 — 예시1 팔로워 구간 · 예시2 지역 · 예시3 평균 조회수 ·
+        예시4 최근 업로드율. 담당자가 이어서 붙일 자리입니다.
+      </p>
 
       {limit < list.length && (
         <button className="more" onClick={() => setLimit((n) => n + 24)}>

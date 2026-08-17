@@ -799,3 +799,42 @@ td small{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
 .bell.quiet{box-shadow:var(--shadow);color:var(--ink-3)}
 .bell.quiet .ic{color:var(--line-3)}
 .bell.quiet .n{background:var(--line-2);color:var(--ink-3)}
+
+/* 좌측 메뉴 — 항목 아래 하위 하나 더 */
+.grp .sub-i{display:flex;flex-direction:column}
+.grp .sub2{
+  margin-left:12px;padding-left:10px;border-left:1px solid var(--line-2);
+  font-size:12.5px;color:var(--ink-3);
+}
+.grp .sub2:hover{color:var(--ink-2);background:var(--line-2)}
+.grp .sub2.on{color:var(--accent-ink);font-weight:600;background:var(--accent-soft)}
+
+/* 핵심 인플루언서 설정 */
+.core-bar{
+  display:flex;align-items:center;gap:clamp(14px,2vw,28px);flex-wrap:wrap;
+  padding:16px 20px;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;margin-bottom:var(--gap);
+}
+.core-bar .cb-g{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.core-bar .cb-g.right{margin-left:auto}
+.core-bar .k{font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.16em;color:var(--ink-3)}
+.core-find{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:var(--gap)}
+.fchip{
+  display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);border-radius:100px;padding:7px 14px;
+  font-size:13px;font-weight:600;letter-spacing:-.016em;color:var(--ink-2);
+}
+.fchip i{font-style:normal;font-size:11px;font-weight:400;color:var(--ink-3)}
+.fchip:hover{border-color:var(--line-3);color:var(--ink)}
+.fchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.fchip.on i{color:rgba(255,255,255,.75)}
+.ccat{
+  display:inline-block;margin-right:4px;font-size:10.5px;font-weight:600;
+  padding:2px 8px;border-radius:100px;background:var(--accent-soft);color:var(--accent-ink);
+}
+.ccat.none{background:var(--line-2);color:var(--ink-3);font-weight:400}
+.corestar{color:var(--warn);margin-right:5px;font-size:11px}
+.idx-note{
+  margin:0;padding:13px 20px;font-size:12.5px;line-height:1.55;color:var(--ink-3);
+  border-top:1px dashed var(--line);background:var(--card-2);
+}

@@ -7,7 +7,7 @@ import { useNotices } from './Notices'
 /* 매일 쓰는 영역(홈 · 대시보드 · 세일즈 · 캠페인)을 위에,
    진입 빈도가 다른 영역(정산 · 관리)을 구분선 아래에 둔다. */
 
-type Item = { label: string; href: string }
+type Item = { label: string; href: string; sub?: Item[] }
 type Group = { label: string; href?: string; items?: Item[] }
 
 const TOP: Group[] = [
@@ -29,7 +29,10 @@ const TOP: Group[] = [
       { label: '모집 · 선정', href: '/campaigns/recruit' },
       { label: '배송 · 콘텐츠', href: '/campaigns/delivery' },
       { label: '검수', href: '/campaigns/review' },
-      { label: '인플루언서 명단', href: '/campaigns/influencers' },
+      {
+        label: '인플루언서 명단', href: '/campaigns/influencers',
+        sub: [{ label: '핵심 인플루언서 설정', href: '/campaigns/influencers/core' }],
+      },
     ],
   },
 ]
@@ -43,8 +46,11 @@ const EXACT = ['/', '/sales']
 /* /campaigns 아래 다른 메뉴가 있어 단순 startsWith 로는 겹친다.
    상세(/campaigns/{id})는 목록 항목이 켜져야 한다. */
 const SIBLINGS = ['/campaigns/recruit', '/campaigns/delivery', '/campaigns/review', '/campaigns/influencers']
+const EXACT_ONLY = ['/campaigns/influencers']
 
 function isOn(path: string, href: string) {
+  // 하위가 딸린 항목은 자기 경로일 때만 켠다
+  if (EXACT_ONLY.includes(href)) return path === href
   if (href === '/campaigns') {
     return path === '/campaigns' || (path.startsWith('/campaigns/') && !SIBLINGS.some((s) => path.startsWith(s)))
   }
@@ -84,10 +90,17 @@ export default function Nav() {
         </p>
         <div className="sub">
           {g.items.map((i) => (
-            <Link key={i.label} href={i.href} className={isOn(path, i.href) ? 'on' : undefined}>
-              {i.label}
-              {badge(i.href)}
-            </Link>
+            <div key={i.label} className="sub-i">
+              <Link href={i.href} className={isOn(path, i.href) ? 'on' : undefined}>
+                {i.label}
+                {badge(i.href)}
+              </Link>
+              {i.sub?.map((x) => (
+                <Link key={x.href} href={x.href} className={`sub2 ${path === x.href ? 'on' : ''}`}>
+                  {x.label}
+                </Link>
+              ))}
+            </div>
           ))}
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import Act from '@/app/ui/Act'
 import { STATUS_LABEL, type Status } from '@/lib/avail-types'
+import { useCore } from '../../Core'
 
 /* 지원 페이지를 어드민에서 만들고, 조건에 맞는 인플루언서에게만 노출한다.
    조건을 바꾸면 대상 인원이 바로 바뀐다. */
@@ -44,6 +45,10 @@ export default function PageBuilder({ pool, campaign, brands }: {
   /** 이미 등록된 거래처. 없으면 이 자리에서 새로 만든다. */
   brands: string[]
 }) {
+  const core = useCore()
+  /* 핵심 인플루언서에게 먼저 보내는 것이 기본이다.
+     급할 때는 꺼서 인재풀 전체로 넓힌다. */
+  const [coreFirst, setCoreFirst] = useState(true)
   const [brand, setBrand] = useState<string>(brands[0] ?? '')
   /* 일정과 경합 — 5,818명에서 지금 제안 가능한 사람만 남기는 두 조건 */
   const [freeOnly, setFreeOnly] = useState(true)
@@ -68,12 +73,14 @@ export default function PageBuilder({ pool, campaign, brands }: {
       if (plat !== '전체' && p.platform !== plat) return false
       if (kr && p.region && p.region !== '한국') return false
       // 진행 중이거나 쿨다운이면 지금 제안을 넣을 수 없다
+      // 핵심 인플루언서에게만 보낸다 (기본)
+      if (coreFirst && !core?.has(p.key)) return false
       if (freeOnly && p.status !== 'open') return false
       // 이 거래처와 최근 90일 안에 이미 함께했으면 뺀다
       if (noRival && p.recentBrands.includes(brand)) return false
       return true
     })
-  }, [pool, tier, hist, plat, kr, freeOnly, noRival, brand])
+  }, [pool, tier, hist, plat, kr, freeOnly, noRival, brand, coreFirst, core])
 
   const blocked = pool.filter((p) => p.status !== 'open')
   const busy = blocked.filter((p) => p.status === 'busy').length
@@ -180,6 +187,18 @@ export default function PageBuilder({ pool, campaign, brands }: {
                       {h.l}
                     </button>
                   ))}
+                </div>
+              </div>
+              <div className="frow">
+                <div className="fl">
+                  <b>핵심 인플루언서</b>
+                  <span>
+                    {core?.size ? `${core.size}명에게 먼저 보냅니다` : '아직 정한 사람이 없습니다 — 설정 화면에서 담아주세요'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button className={`toggle ${coreFirst ? 'on' : ''}`} onClick={() => setCoreFirst((v) => !v)} aria-label="핵심 대상" />
+                  <span style={{ fontSize: 13.5 }}>{coreFirst ? '핵심에게만' : '인재풀 전체'}</span>
                 </div>
               </div>
               <div className="frow">

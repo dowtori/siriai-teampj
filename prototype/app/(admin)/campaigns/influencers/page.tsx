@@ -1,5 +1,6 @@
 import { getDb, cnt } from '@/lib/db'
 import { availability, counts, type Status } from '@/lib/availability'
+import { categories } from '@/lib/categories'
 import Roster, { type CreatorRow } from './Roster'
 
 /* 인플루언서 명단 — 진행시트를 되짚어 만든 협업 이력이 기준이다.
@@ -43,10 +44,12 @@ export default function InfluencersPage() {
   }
 
   const av = availability()
+  const cat = categories()
   const rows: CreatorRow[] = (db.creators ?? []).map((cr) => {
     const d = detail.get(cr.handle)
     const a = av.get(cr.handle)
     return {
+      cats: cat.get(cr.handle) ?? [],
       status: (a?.status ?? 'open') as Status,
       until: a?.until ?? null,
       why: a?.reason ?? '진행 중인 건이 없습니다',

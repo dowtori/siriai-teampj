@@ -1,5 +1,6 @@
 import Nav from './Nav'
 import { NoticeProvider } from './Notices'
+import { CoreProvider } from './Core'
 import { notices } from '@/lib/badges'
 
 /* 어드민 셸 — 좌측 메뉴 + 본문.
@@ -8,10 +9,12 @@ import { notices } from '@/lib/badges'
 export default function AdminLayout({ children }: LayoutProps<'/'>) {
   return (
     <NoticeProvider items={notices()}>
+      <CoreProvider>
       <div className="shell">
         <Nav />
         <main className="main">{children}</main>
       </div>
+      </CoreProvider>
     </NoticeProvider>
   )
 }
