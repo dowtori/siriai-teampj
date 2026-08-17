@@ -8,6 +8,8 @@ import { useCore } from '../../Core'
 
 export type CreatorRow = {
   cats: Category[]
+  lastAt: string | null
+  lastName: string | null
   /** 지금 제안을 넣을 수 있는가 */
   status: Status
   until: string | null
@@ -46,7 +48,15 @@ const TABS: { k: Tab; l: string; d: string }[] = [
   { k: 'all', l: '전체', d: '' },
 ]
 
-const PAGE = 12
+const SORTS = [
+  { k: 'worked', l: '협업 횟수 순' },
+  { k: 'recent', l: '최근 협업 순' },
+  { k: 'follow', l: '팔로워 순' },
+] as const
+type SortKey = (typeof SORTS)[number]['k']
+
+const SIZES = [20, 50, 100, 200] as const
+const ymd = (d: string | null) => (d ? d.slice(2).replace(/-/g, '.') : '—')
 
 export default function Roster({ rows }: { rows: CreatorRow[] }) {
   const core = useCore()
@@ -54,8 +64,14 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
   const [cat, setCat] = useState<Category | '전체'>('전체')
   const [q, setQ] = useState('')
   const [plat, setPlat] = useState('전체')
-  const [limit, setLimit] = useState(PAGE)
   const [open, setOpen] = useState<CreatorRow | null>(null)
+  const [sort, setSort] = useState<SortKey>('worked')
+  const [desc, setDesc] = useState(true)
+  const [size, setSize] = useState<number>(50)
+  const [page, setPage] = useState(0)
+  /* 핵심을 맨 위로 올릴지. 기본은 올린다 — 명단을 열면 정예부터 보여야 한다.
+     끄면 고른 정렬만으로 줄을 세운다. */
+  const [coreTop, setCoreTop] = useState(true)
 
   const platforms = useMemo(() => {
     const m = new Map<string, number>()
@@ -76,11 +92,28 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
       && (cat === '전체' || (cat === '기타' ? r.cats.length === 0 : r.cats.includes(cat)))
       && (!t || r.handle.includes(t) || r.name.toLowerCase().includes(t)),
     )
-    // 핵심 인플루언서를 맨 위에 둔다
-    return [...list].sort((a, b) => Number(!!core?.has(b.key)) - Number(!!core?.has(a.key)))
-  }, [rows, tab, plat, q, cat, core])
+    const dir = desc ? 1 : -1
+    return [...list].sort((a, b) => {
+      if (coreTop) {
+        const c = Number(!!core?.has(b.key)) - Number(!!core?.has(a.key))
+        if (c !== 0) return c
+      }
+      if (sort === 'worked') return (b.worked - a.worked) * dir || (b.lastAt ?? '').localeCompare(a.lastAt ?? '')
+      if (sort === 'recent') return (b.lastAt ?? '').localeCompare(a.lastAt ?? '') * dir || b.worked - a.worked
+      return ((b.followers ?? -1) - (a.followers ?? -1)) * dir || b.worked - a.worked
+    })
+  }, [rows, tab, plat, q, cat, core, sort, desc, coreTop])
 
-  const reset = () => setLimit(PAGE)
+  const pages = Math.max(1, Math.ceil(list.length / size))
+  const cur = Math.min(page, pages - 1)
+  const shown = list.slice(cur * size, cur * size + size)
+
+  const reset = () => setPage(0)
+  const flip = (k: SortKey) => {
+    if (sort === k) setDesc((v) => !v)
+    else { setSort(k); setDesc(true) }
+    setPage(0)
+  }
 
   return (
     <>
@@ -126,7 +159,34 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
         </div>
       </div>
 
-      <div className="sheet" style={{ maxHeight: 'none', border: 0, borderRadius: 0 }}>
+      <div className="core-bar" style={{ margin: 0, border: 0, borderBottom: '1px solid var(--line-2)', borderRadius: 0 }}>
+        <div className="cb-g">
+          <span className="k">정렬</span>
+          <div className="seg">
+            {SORTS.map((x) => (
+              <button key={x.k} className={sort === x.k ? 'on' : ''} onClick={() => flip(x.k)}>
+                {x.l}{sort === x.k && <i className="dir">{desc ? '↓' : '↑'}</i>}
+              </button>
+            ))}
+          </div>
+          <span className="dirn">{desc ? '내림차순' : '오름차순'}</span>
+        </div>
+        <div className="cb-g">
+          <span className="k">한 쪽에</span>
+          <div className="seg">
+            {SIZES.map((n) => (
+              <button key={n} className={size === n ? 'on' : ''} onClick={() => { setSize(n); setPage(0) }}>{n}</button>
+            ))}
+          </div>
+        </div>
+        <div className="cb-g right">
+          <button className={`opt ${coreTop ? 'on' : ''}`} onClick={() => { setCoreTop((v) => !v); setPage(0) }}>
+            ★ 핵심 먼저
+          </button>
+        </div>
+      </div>
+
+      <div className="sheet tall" style={{ border: 0, borderRadius: 0 }}>
         <table>
           <thead>
             <tr>
@@ -136,11 +196,12 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
               <th className="n" style={{ width: 92 }}>팔로워</th>
               <th className="n" style={{ width: 68 }}>ER</th>
               <th className="n" style={{ width: 104 }}>최근 단가</th>
+              <th style={{ width: 200 }}>최근 협업</th>
               <th style={{ width: 110 }}>일정</th>
             </tr>
           </thead>
           <tbody>
-            {list.slice(0, limit).map((r) => (
+            {shown.map((r) => (
               <tr key={r.key} onClick={() => setOpen(r)} style={{ cursor: 'pointer' }}>
                 <td>
                   <span className="hl2">
@@ -161,6 +222,10 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
                 <td className="n">{r.er != null ? `${r.er.toFixed(1)}%` : '—'}</td>
                 <td className="n">{won(r.fee)}</td>
                 <td>
+                  <span className="lastc">{ymd(r.lastAt)}</span>
+                  <small>{r.lastName ?? '기록 없음'}</small>
+                </td>
+                <td>
                   <span className={`chip st ${r.status === 'open' ? 'pass' : r.status === 'busy' ? 'fix' : 'wait'}`}>
                     {STATUS_LABEL[r.status]}
                   </span>
@@ -179,11 +244,17 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
         예시4 최근 업로드율. 담당자가 이어서 붙일 자리입니다.
       </p>
 
-      {limit < list.length && (
-        <button className="more" onClick={() => setLimit((n) => n + 24)}>
-          {cnt(list.length - limit)}명 더 보기
-        </button>
-      )}
+      <div className="pager">
+        <button className="btn" disabled={cur === 0} onClick={() => setPage(0)}>처음</button>
+        <button className="btn" disabled={cur === 0} onClick={() => setPage(cur - 1)}>← 이전</button>
+        <span className="pg">
+          {list.length === 0 ? '0' : (cur * size + 1).toLocaleString('ko-KR')}–
+          {Math.min((cur + 1) * size, list.length).toLocaleString('ko-KR')}
+          {' / '}{list.length.toLocaleString('ko-KR')}명 · {cur + 1}/{pages}쪽
+        </span>
+        <button className="btn" disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)}>다음 →</button>
+        <button className="btn" disabled={cur >= pages - 1} onClick={() => setPage(pages - 1)}>마지막</button>
+      </div>
 
       <Drawer
         open={!!open}

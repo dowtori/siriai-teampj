@@ -228,7 +228,7 @@ export default function Picker({ rows }: { rows: Pick[] }) {
             </div>
           </div>
 
-          <div className="sheet" style={{ maxHeight: 'none', border: 0, borderRadius: 0 }}>
+          <div className="sheet tall" style={{ border: 0, borderRadius: 0 }}>
             <table>
               <thead>
                 <tr>
@@ -286,7 +286,7 @@ export default function Picker({ rows }: { rows: Pick[] }) {
           </div>
         </div>
 
-        <div className="side">
+        <div className="side sticky-side">
           <div className="panel">
             <div className="bar">
               <b style={{ fontSize: 14 }}>핵심 인플루언서</b>

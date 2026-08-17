@@ -43,6 +43,20 @@ export default function InfluencersPage() {
     detail.set(k, cur)
   }
 
+  // 최근 협업 — 언제, 무슨 캠페인이었는지. 정렬과 열에 함께 쓴다
+  const last = new Map<string, { at: string; name: string }>()
+  const camp = new Map(db.campaigns.map((c) => [c.id, c]))
+  for (const p of db.participations) {
+    if (!p.handleUrl || !p.campaignId) continue
+    const c = camp.get(p.campaignId)
+    const dt = c?.dates.end ?? c?.dates.due ?? null
+    if (!dt || !c) continue
+    const k = p.handleUrl.split('/').pop()!.toLowerCase()
+    if ((last.get(k)?.at ?? '') < dt) {
+      last.set(k, { at: dt, name: c.name.replace(/^\[[^\]]+\]\s*/, '') })
+    }
+  }
+
   const av = availability()
   const cat = categories()
   const rows: CreatorRow[] = (db.creators ?? []).map((cr) => {
@@ -50,6 +64,8 @@ export default function InfluencersPage() {
     const a = av.get(cr.handle)
     return {
       cats: cat.get(cr.handle) ?? [],
+      lastAt: last.get(cr.handle)?.at ?? null,
+      lastName: last.get(cr.handle)?.name ?? (cr.campaigns[0] ?? null),
       status: (a?.status ?? 'open') as Status,
       until: a?.until ?? null,
       why: a?.reason ?? '진행 중인 건이 없습니다',
