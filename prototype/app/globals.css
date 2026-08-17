@@ -895,3 +895,23 @@ td small{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
 .fin:focus{outline:0;border-color:var(--accent)}
 /* 콘텐츠 검수는 항목이 다섯이라 자리를 더 준다 */
 .rv-head .g.wide{flex:1.4}
+
+/* 핵심 인플루언서 — 담는 쪽 */
+.core-bar .seg button .dir{font-style:normal;margin-left:5px;font-size:10px;opacity:.8}
+.core-bar .dirn{font-size:11.5px;color:var(--ink-3)}
+/* 담긴 줄은 눈에 띄게 — 체크가 곧 명단이라는 걸 줄 전체로 말한다 */
+.sheet tbody tr.is-core{background:var(--accent-soft)}
+.sheet tbody tr.is-core:hover{background:var(--accent-soft)}
+.sheet tbody tr.is-core td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.sheet .lastc{font-family:var(--lt);font-variant-numeric:tabular-nums;font-size:12px}
+.pager{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:14px 20px;border-top:1px solid var(--line-2);background:var(--card-2);
+}
+.pager .btn{padding:7px 13px;font-size:12.5px}
+.pager .btn:disabled{opacity:.35;cursor:not-allowed}
+.pager .pg{
+  margin:0 auto;font-family:var(--lt);font-size:12.5px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;
+}
+textarea.fin{font-family:var(--lt);font-size:12.5px}

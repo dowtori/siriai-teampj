@@ -11,16 +11,18 @@ export default function CorePage() {
   const av = availability()
   const cat = categories()
 
-  // 최근 협업 시점 — 최신순 정렬의 근거
-  const last = new Map<string, string>()
+  // 최근 협업 — 언제, 무슨 캠페인이었는지까지 남긴다
+  const last = new Map<string, { at: string; name: string }>()
   const camp = new Map(db.campaigns.map((c) => [c.id, c]))
   for (const p of db.participations) {
     if (!p.handleUrl || !p.campaignId) continue
     const c = camp.get(p.campaignId)
     const d = c?.dates.end ?? c?.dates.due ?? null
-    if (!d) continue
+    if (!d || !c) continue
     const k = p.handleUrl.split('/').pop()!.toLowerCase()
-    if ((last.get(k) ?? '') < d) last.set(k, d)
+    if ((last.get(k)?.at ?? '') < d) {
+      last.set(k, { at: d, name: c.name.replace(/^\[[^\]]+\]\s*/, '') })
+    }
   }
 
   const rows: Pick[] = (db.creators ?? []).map((c) => ({
@@ -28,7 +30,9 @@ export default function CorePage() {
     handle: c.handle,
     platform: c.platformLabel,
     worked: c.campaignCount,
-    lastAt: last.get(c.handle) ?? null,
+    lastAt: last.get(c.handle)?.at ?? null,
+    lastName: last.get(c.handle)?.name ?? (c.campaigns[0] ?? null),
+    url: c.url,
     cats: cat.get(c.handle) ?? [],
     status: av.get(c.handle)?.status ?? 'open',
   }))
