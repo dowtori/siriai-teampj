@@ -932,3 +932,4 @@ textarea.fin{font-family:var(--lt);font-size:12.5px}
   .side.sticky-side{position:static}
   .sheet.tall{max-height:none}
 }
+.unk{font-size:11px;color:var(--ink-3);white-space:nowrap}

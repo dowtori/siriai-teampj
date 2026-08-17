@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/db'
 import { availability } from '@/lib/availability'
 import { categories } from '@/lib/categories'
+import { collab } from '@/lib/collab'
 import Picker, { type Pick } from './Picker'
 
 /* 핵심 인플루언서 설정 — 5,818명 인재풀에서 상시 데리고 갈 정예를 고른다.
@@ -10,6 +11,7 @@ export default function CorePage() {
   const db = getDb()
   const av = availability()
   const cat = categories()
+  const col = collab()
 
   // 최근 협업 — 언제, 무슨 캠페인이었는지까지 남긴다
   const last = new Map<string, { at: string; name: string }>()
@@ -29,7 +31,9 @@ export default function CorePage() {
     id: c.id,
     handle: c.handle,
     platform: c.platformLabel,
-    worked: c.campaignCount,
+    listed: col.get(c.handle)?.listed ?? c.campaignCount,
+    picked: col.get(c.handle)?.picked ?? 0,
+    known: col.get(c.handle)?.known ?? false,
     lastAt: last.get(c.handle)?.at ?? null,
     lastName: last.get(c.handle)?.name ?? (c.campaigns[0] ?? null),
     url: c.url,

@@ -1,6 +1,7 @@
 import { getDb, cnt } from '@/lib/db'
 import { availability, counts, type Status } from '@/lib/availability'
 import { categories } from '@/lib/categories'
+import { collab, collabCounts } from '@/lib/collab'
 import Roster, { type CreatorRow } from './Roster'
 
 /* 인플루언서 명단 — 진행시트를 되짚어 만든 협업 이력이 기준이다.
@@ -59,6 +60,7 @@ export default function InfluencersPage() {
 
   const av = availability()
   const cat = categories()
+  const col = collab()
   const rows: CreatorRow[] = (db.creators ?? []).map((cr) => {
     const d = detail.get(cr.handle)
     const a = av.get(cr.handle)
@@ -75,7 +77,9 @@ export default function InfluencersPage() {
       name: cr.name,
       url: cr.url,
       platform: cr.platformLabel,
-      worked: cr.campaignCount,
+      listed: col.get(cr.handle)?.listed ?? cr.campaignCount,
+      picked: col.get(cr.handle)?.picked ?? 0,
+      known: col.get(cr.handle)?.known ?? false,
       campaigns: cr.campaigns,
       campaignsMore: cr.campaignsMore,
       followers: d?.followers ?? null,
@@ -88,8 +92,8 @@ export default function InfluencersPage() {
     }
   })
 
-  const repeat = rows.filter((r) => r.worked >= 2).length
-  const regular = rows.filter((r) => r.worked >= 6).length
+  const cc = collabCounts()
+  const repeat = rows.filter((r) => r.picked >= 2).length
   const c = counts()
 
   return (
@@ -111,14 +115,14 @@ export default function InfluencersPage() {
           <span className="sd">협업한 적 있는 계정</span>
         </div>
         <div className="score">
-          <span className="sk">REPEAT</span>
-          <span className="sv">{cnt(repeat)}</span>
-          <span className="sd">두 번 이상 함께함</span>
+          <span className="sk">WORKED</span>
+          <span className="sv">{cnt(cc.worked)}</span>
+          <span className="sd">실제로 선정되어 진행한 계정</span>
         </div>
         <div className="score">
-          <span className="sk">REGULAR</span>
-          <span className="sv">{cnt(regular)}</span>
-          <span className="sd">여섯 번 이상 — 단골</span>
+          <span className="sk">REPEAT</span>
+          <span className="sv">{cnt(repeat)}</span>
+          <span className="sd">두 번 이상 선정 · 확인 불가 {cnt(cc.unknown)}</span>
         </div>
         <div className="score">
           <span className="sk">AVAILABLE</span>

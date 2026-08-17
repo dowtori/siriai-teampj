@@ -14,7 +14,9 @@ export type Pool = {
   handle: string | null
   platform: string
   followers: number | null
-  worked: number
+  listed: number
+  picked: number
+  known: boolean
   region: string | null
   /** 지금 붙일 수 있는가 — 진행 중 · 쿨다운이면 제안이 안 나간다 */
   status: Status
@@ -29,12 +31,13 @@ const TIERS = [
   { k: 'mid',   l: '5만 이상',     min: 50_000, max: Infinity },
 ] as const
 
-/* 협업 횟수는 진행시트를 되짚어 센 값이라 전 계정에 다 있다. */
+/* 리스트에 오른 횟수가 아니라 실제로 선정된 횟수로 건다.
+   제안만 받고 한 번도 같이 안 한 사람이 '단골'로 잡히면 안 된다. */
 const HIST = [
   { k: 'any',     l: '전체' },
-  { k: 'once',    l: '1회' },
+  { k: 'worked',  l: '선정 경험' },
   { k: 'repeat',  l: '2회 이상' },
-  { k: 'regular', l: '단골 6회+' },
+  { k: 'regular', l: '단골 3회+' },
 ] as const
 
 const PLATS = ['전체', '인스타그램', '틱톡', '유튜브', '네이버블로그'] as const
@@ -67,9 +70,9 @@ export default function PageBuilder({ pool, campaign, brands }: {
         if (p.followers == null) return false
         if (p.followers < t.min || p.followers >= t.max) return false
       }
-      if (hist === 'once' && p.worked !== 1) return false
-      if (hist === 'repeat' && p.worked < 2) return false
-      if (hist === 'regular' && p.worked < 6) return false
+      if (hist === 'worked' && p.picked < 1) return false
+      if (hist === 'repeat' && p.picked < 2) return false
+      if (hist === 'regular' && p.picked < 3) return false
       if (plat !== '전체' && p.platform !== plat) return false
       if (kr && p.region && p.region !== '한국') return false
       // 진행 중이거나 쿨다운이면 지금 제안을 넣을 수 없다
@@ -87,7 +90,7 @@ export default function PageBuilder({ pool, campaign, brands }: {
   const cooling = blocked.length - busy
 
   // 많이 함께한 사람부터 보여준다
-  const top = [...matched].sort((a, b) => b.worked - a.worked).slice(0, 6)
+  const top = [...matched].sort((a, b) => b.picked - a.picked || b.listed - a.listed).slice(0, 6)
 
   return (
     <div className="work">
@@ -180,7 +183,7 @@ export default function PageBuilder({ pool, campaign, brands }: {
                 </div>
               </div>
               <div className="frow">
-                <div className="fl"><b>협업 이력</b><span>지금까지 함께한 횟수</span></div>
+                <div className="fl"><b>협업 이력</b><span>리스트 등재가 아니라 실제 선정된 횟수</span></div>
                 <div className="opts">
                   {HIST.map((h) => (
                     <button key={h.k} className={`opt ${hist === h.k ? 'on' : ''}`} onClick={() => setHist(h.k)}>
@@ -291,7 +294,7 @@ export default function PageBuilder({ pool, campaign, brands }: {
                     {p.status !== 'open' && (
                       <b style={{ color: 'var(--warn)' }}>{STATUS_LABEL[p.status]} · </b>
                     )}
-                    {p.platform} · 협업 {p.worked}회
+                    {p.platform} · 선정 {p.known ? p.picked + '회' : '확인 필요'} · 리스트 {p.listed}회
                     {p.followers != null ? ` · ${p.followers.toLocaleString('ko-KR')} 팔로워` : ''}
                   </span>
                 </span>

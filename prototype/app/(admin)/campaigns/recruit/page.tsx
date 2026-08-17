@@ -1,5 +1,6 @@
 import { getDb, cnt, won } from '@/lib/db'
 import { availability } from '@/lib/availability'
+import { collab } from '@/lib/collab'
 import Act from '@/app/ui/Act'
 import PageBuilder, { type Pool } from './PageBuilder'
 
@@ -37,6 +38,7 @@ export default function Recruit() {
   }
 
   const av = availability()
+  const col = collab()
   const pool2: Pool[] = (db.creators ?? []).map((c) => {
     const d = info.get(c.handle)
     const a = av.get(c.handle)
@@ -46,7 +48,9 @@ export default function Recruit() {
       handle: '@' + c.handle,
       platform: c.platformLabel,
       followers: d?.followers ?? null,
-      worked: c.campaignCount,
+      listed: col.get(c.handle)?.listed ?? c.campaignCount,
+      picked: col.get(c.handle)?.picked ?? 0,
+      known: col.get(c.handle)?.known ?? false,
       region: d?.region ?? null,
       status: a?.status ?? 'open',
       why: a?.reason ?? '진행 중인 건이 없습니다',

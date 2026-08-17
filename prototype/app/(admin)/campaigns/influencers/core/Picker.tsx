@@ -10,7 +10,11 @@ export type Pick = {
   id: string
   handle: string
   platform: string
-  worked: number
+  /** 리스트에 오른 횟수 (제안) */
+  listed: number
+  /** 선정된 횟수 (실제 협업) */
+  picked: number
+  known: boolean
   /** 마지막 협업 시점과 그때 캠페인 */
   lastAt: string | null
   lastName: string | null
@@ -20,7 +24,8 @@ export type Pick = {
 }
 
 const SORTS = [
-  { k: 'worked', l: '협업 횟수 순' },
+  { k: 'picked', l: '선정 횟수 순' },
+  { k: 'listed', l: '리스트 등재 순' },
   { k: 'recent', l: '최근 협업 순' },
 ] as const
 type SortKey = (typeof SORTS)[number]['k']
@@ -73,7 +78,7 @@ export function parseHandles(text: string): { handles: string[]; skipped: string
 
 export default function Picker({ rows }: { rows: Pick[] }) {
   const core = useCore()
-  const [sort, setSort] = useState<SortKey>('worked')
+  const [sort, setSort] = useState<SortKey>('picked')
   const [desc, setDesc] = useState(true)
   const [size, setSize] = useState<number>(50)
   const [page, setPage] = useState(0)
@@ -90,11 +95,11 @@ export default function Picker({ rows }: { rows: Pick[] }) {
       cats.some((c) => (c === '기타' ? r.cats.length === 0 : r.cats.includes(c))),
     )
     const dir = desc ? 1 : -1
-    return [...list].sort((a, b) =>
-      sort === 'worked'
-        ? (b.worked - a.worked) * dir || (b.lastAt ?? '').localeCompare(a.lastAt ?? '')
-        : (b.lastAt ?? '').localeCompare(a.lastAt ?? '') * dir || b.worked - a.worked,
-    )
+    return [...list].sort((a, b) => {
+      if (sort === 'picked') return (b.picked - a.picked) * dir || b.listed - a.listed
+      if (sort === 'listed') return (b.listed - a.listed) * dir || b.picked - a.picked
+      return (b.lastAt ?? '').localeCompare(a.lastAt ?? '') * dir || b.picked - a.picked
+    })
   }, [rows, sort, desc, cats])
 
   const pages = Math.max(1, Math.ceil(sorted.length / size))
@@ -199,7 +204,7 @@ export default function Picker({ rows }: { rows: Pick[] }) {
               onClick={() => core?.toggle(r.id)}
             >
               {core?.has(r.id) ? '✓ ' : '+ '}{at(r.handle)}
-              <i>협업 {r.worked}회</i>
+              <i>선정 {r.known ? r.picked + '회' : '확인 필요'}</i>
             </button>
           ))}
         </div>
@@ -235,7 +240,8 @@ export default function Picker({ rows }: { rows: Pick[] }) {
                   <th style={{ width: 44 }}>핵심</th>
                   <th>인플루언서</th>
                   <th style={{ width: 150 }}>카테고리</th>
-                  <th className="n" style={{ width: 74 }}>협업</th>
+                  <th className="n" style={{ width: 74 }}>선정</th>
+                  <th className="n" style={{ width: 80 }}>리스트</th>
                   <th style={{ width: 210 }}>최근 협업</th>
                   <th style={{ width: 92 }}>일정</th>
                 </tr>
@@ -257,7 +263,12 @@ export default function Picker({ rows }: { rows: Pick[] }) {
                           ? <span className="ccat none">미분류</span>
                           : r.cats.map((c) => <span className="ccat" key={c}>{c}</span>)}
                       </td>
-                      <td className="n"><b>{r.worked}</b>회</td>
+                      <td className="n">
+                        {r.known
+                          ? <><b style={{ color: r.picked >= 3 ? 'var(--accent)' : 'inherit' }}>{r.picked}</b>회</>
+                          : <span className="unk" title="진행시트가 캠페인에 붙지 않아 선정 여부를 알 수 없습니다">확인 필요</span>}
+                      </td>
+                      <td className="n" style={{ color: 'var(--ink-3)' }}>{r.listed}회</td>
                       <td>
                         <span className="lastc">{ymd(r.lastAt)}</span>
                         <small>{r.lastName ?? '기록 없음'}</small>
@@ -297,7 +308,7 @@ export default function Picker({ rows }: { rows: Pick[] }) {
                 <div className="row" key={r.id} style={{ padding: '11px 20px', cursor: 'default' }}>
                   <span className="lead">
                     <span className="t" style={{ fontSize: 13.5 }}>{at(r.handle)}</span>
-                    <span className="s">협업 {r.worked}회 · {ymd(r.lastAt)}</span>
+                    <span className="s">선정 {r.known ? r.picked + '회' : '확인 필요'} · 리스트 {r.listed}회</span>
                   </span>
                   <span className="tail">
                     <button className="btn ghost" onClick={() => core?.toggle(r.id)}>빼기</button>

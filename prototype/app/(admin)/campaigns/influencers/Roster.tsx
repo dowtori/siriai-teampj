@@ -20,8 +20,12 @@ export type CreatorRow = {
   name: string
   url: string | null
   platform: string
-  /** 진행시트를 되짚어 센 협업 횟수 */
-  worked: number
+  /** 리스트에 오른 횟수 (제안) */
+  listed: number
+  /** 선정된 횟수 (실제 협업) */
+  picked: number
+  /** 선정 여부를 확인할 수 있는 계정인가 */
+  known: boolean
   campaigns: string[]
   campaignsMore: number
   followers: number | null
@@ -42,14 +46,15 @@ type Tab = 'core' | 'open' | 'regular' | 'repeat' | 'busy' | 'all'
 const TABS: { k: Tab; l: string; d: string }[] = [
   { k: 'core', l: '핵심', d: '상시 데리고 가는 정예' },
   { k: 'open', l: '지금 가능', d: '진행 중인 건도 쿨다운도 없음' },
-  { k: 'regular', l: '단골', d: '여섯 번 이상' },
-  { k: 'repeat', l: '재협업', d: '두 번 이상' },
+  { k: 'regular', l: '단골', d: '세 번 이상 선정' },
+  { k: 'repeat', l: '재협업', d: '두 번 이상 선정' },
   { k: 'busy', l: '묶인 사람', d: '진행 중 · 쿨다운' },
   { k: 'all', l: '전체', d: '' },
 ]
 
 const SORTS = [
-  { k: 'worked', l: '협업 횟수 순' },
+  { k: 'picked', l: '선정 횟수 순' },
+  { k: 'listed', l: '리스트 등재 순' },
   { k: 'recent', l: '최근 협업 순' },
   { k: 'follow', l: '팔로워 순' },
 ] as const
@@ -65,7 +70,7 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
   const [q, setQ] = useState('')
   const [plat, setPlat] = useState('전체')
   const [open, setOpen] = useState<CreatorRow | null>(null)
-  const [sort, setSort] = useState<SortKey>('worked')
+  const [sort, setSort] = useState<SortKey>('picked')
   const [desc, setDesc] = useState(true)
   const [size, setSize] = useState<number>(50)
   const [page, setPage] = useState(0)
@@ -84,8 +89,8 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
     const list = rows.filter((r) =>
       (tab === 'core' ? core?.has(r.key)
         : tab === 'open' ? r.status === 'open'
-        : tab === 'regular' ? r.worked >= 6
-        : tab === 'repeat' ? r.worked >= 2
+        : tab === 'regular' ? r.picked >= 3
+        : tab === 'repeat' ? r.picked >= 2
         : tab === 'busy' ? r.status !== 'open'
         : true)
       && (plat === '전체' || r.platform === plat)
@@ -98,9 +103,10 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
         const c = Number(!!core?.has(b.key)) - Number(!!core?.has(a.key))
         if (c !== 0) return c
       }
-      if (sort === 'worked') return (b.worked - a.worked) * dir || (b.lastAt ?? '').localeCompare(a.lastAt ?? '')
-      if (sort === 'recent') return (b.lastAt ?? '').localeCompare(a.lastAt ?? '') * dir || b.worked - a.worked
-      return ((b.followers ?? -1) - (a.followers ?? -1)) * dir || b.worked - a.worked
+      if (sort === 'picked') return (b.picked - a.picked) * dir || b.listed - a.listed
+      if (sort === 'listed') return (b.listed - a.listed) * dir || b.picked - a.picked
+      if (sort === 'recent') return (b.lastAt ?? '').localeCompare(a.lastAt ?? '') * dir || b.picked - a.picked
+      return ((b.followers ?? -1) - (a.followers ?? -1)) * dir || b.picked - a.picked
     })
   }, [rows, tab, plat, q, cat, core, sort, desc, coreTop])
 
@@ -192,7 +198,8 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
             <tr>
               <th>인플루언서</th>
               <th style={{ width: 140 }}>카테고리</th>
-              <th className="n" style={{ width: 78 }}>협업</th>
+              <th className="n" style={{ width: 78 }}>선정</th>
+              <th className="n" style={{ width: 86 }}>리스트</th>
               <th className="n" style={{ width: 92 }}>팔로워</th>
               <th className="n" style={{ width: 68 }}>ER</th>
               <th className="n" style={{ width: 104 }}>최근 단가</th>
@@ -216,8 +223,11 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
                     : r.cats.map((c) => <span className="ccat" key={c}>{c}</span>)}
                 </td>
                 <td className="n">
-                  <b style={{ color: r.worked >= 6 ? 'var(--accent)' : 'inherit' }}>{r.worked}</b>회
+                  {r.known
+                    ? <><b style={{ color: r.picked >= 3 ? 'var(--accent)' : 'inherit' }}>{r.picked}</b>회</>
+                    : <span className="unk" title="진행시트가 캠페인에 붙지 않아 선정 여부를 알 수 없습니다">확인 필요</span>}
                 </td>
+                <td className="n" style={{ color: 'var(--ink-3)' }}>{r.listed}회</td>
                 <td className="n">{cnt(r.followers)}</td>
                 <td className="n">{r.er != null ? `${r.er.toFixed(1)}%` : '—'}</td>
                 <td className="n">{won(r.fee)}</td>
@@ -261,7 +271,7 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
         onClose={() => setOpen(null)}
         eyebrow="CREATOR"
         title={open ? at(open.handle) : ''}
-        meta={open ? `${open.platform} · 협업 ${open.worked}회` : null}
+        meta={open ? `${open.platform} · 선정 ${open.known ? open.picked + '회' : '확인 필요'} · 리스트 ${open.listed}회` : null}
         footer={
           <>
             {open?.url && (
@@ -274,7 +284,7 @@ export default function Roster({ rows }: { rows: CreatorRow[] }) {
         {open && (
           <>
             <div className="trio">
-              <div><span className="k">협업</span><span className="v">{open.worked}회</span></div>
+              <div><span className="k">선정</span><span className="v">{open.known ? `${open.picked}회` : '확인 필요'}</span></div>
               <div><span className="k">팔로워</span><span className="v">{cnt(open.followers)}</span></div>
               <div><span className="k">최근 단가</span><span className="v">{won(open.fee)}</span></div>
             </div>
