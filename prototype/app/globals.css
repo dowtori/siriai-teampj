@@ -838,3 +838,60 @@ td small{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
   margin:0;padding:13px 20px;font-size:12.5px;line-height:1.55;color:var(--ink-3);
   border-top:1px dashed var(--line);background:var(--card-2);
 }
+
+/* ═══ 어드민에도 있어야 하는 것 ═══
+   아래 클래스들은 public.css 에만 있었다. 어드민 셸은 그 파일을 불러오지 않으므로
+   어드민 화면에서는 브라우저 기본 모양으로 떨어졌다.
+   공개 화면(/b · /c · /apply)을 한 번 들르면 그 CSS 가 문서에 남아
+   어드민 버튼이 갑자기 제대로 보이고, 새로고침하면 다시 기본으로 돌아갔다.
+   그래서 "오락가락"했다. 어드민 몫을 여기에 따로 둔다. */
+
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{
+  padding:9px 15px;border-radius:100px;border:1px solid var(--line);background:var(--card);
+  font-family:inherit;font-size:13px;font-weight:600;letter-spacing:-.014em;
+  color:var(--ink-2);cursor:pointer;
+  transition:background .14s var(--ease),color .14s var(--ease),border-color .14s var(--ease);
+}
+.opt:hover{border-color:var(--line-3);color:var(--ink)}
+.opt.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+/* 표 */
+.sheet{overflow:auto;border:1px solid var(--line);border-radius:10px}
+.sheet table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:740px}
+.sheet th,.sheet td{
+  padding:10px 12px;text-align:left;border-bottom:1px solid var(--line-2);
+  letter-spacing:-.006em;white-space:nowrap;vertical-align:middle;
+}
+.sheet th{
+  font-family:var(--lt);font-size:9px;font-weight:500;letter-spacing:.13em;color:var(--ink-3);
+  background:var(--card-2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1;
+}
+.sheet td.n,.sheet th.n{text-align:right;font-family:var(--lt);font-variant-numeric:tabular-nums}
+.sheet tbody tr:last-child td{border-bottom:0}
+.sheet tbody tr:hover{background:var(--card-2)}
+.sheet .hl2{font-family:var(--lt);font-weight:600;color:var(--accent-ink)}
+.sheet td small{
+  display:block;font-size:11px;color:var(--ink-3);white-space:normal;
+  margin-top:2px;max-width:240px;line-height:1.4;
+}
+
+/* 강조 블록 */
+.ap-only{
+  border:1px solid var(--accent);background:var(--accent-soft);border-radius:14px;
+  padding:18px 20px;display:flex;flex-direction:column;gap:16px;
+}
+.ap-only-k{
+  font-family:var(--lt);font-size:9.5px;font-weight:500;letter-spacing:.18em;color:var(--accent-ink);
+}
+
+/* 검색 입력 — 어디에도 정의가 없어 기본 입력창으로 떨어져 있었다 */
+.fin{
+  border:1px solid var(--line);background:var(--card);border-radius:9px;
+  padding:8px 13px;font-family:inherit;font-size:13px;letter-spacing:-.012em;color:var(--ink);
+  transition:border-color .14s var(--ease);
+}
+.fin::placeholder{color:var(--ink-3)}
+.fin:focus{outline:0;border-color:var(--accent)}
+/* 콘텐츠 검수는 항목이 다섯이라 자리를 더 준다 */
+.rv-head .g.wide{flex:1.4}
